@@ -11,10 +11,10 @@ export OPENBLAS_NUM_THREADS=1
 task=FD2
 model=dssgnn
 aggr="mean"
-ablate="both"
+ablate="dss"
 seed=58
 lrexp=3
-epoch=50
+epoch=2
 
 #
 rm -rf logs/cache/${task}*
@@ -27,6 +27,7 @@ rm -rf logs/schedule/${task}~dx2:_:e${epoch}-s${seed}
     --num-hops 2 --num-processes 4 --unit-process 60.0 --num-epochs ${epoch} \
     --batch-size-node 128 --batch-size-edge-train 256 --batch-size-edge-valid 256 --batch-size-edge-test 256 \
     --negative-rate-train 2 --negative-rate-eval 50 \
+    --skip-forest \
     --seed ${seed}
 
 #

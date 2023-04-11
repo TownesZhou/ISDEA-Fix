@@ -44,6 +44,7 @@ def main() -> None:
     parser.add_argument("--batch-size-edge-test", type=int, required=True, help="Batch size of test edge sampling.")
     parser.add_argument("--negative-rate-train", type=int, required=True, help="Negative sampling rate of training.")
     parser.add_argument("--negative-rate-eval", type=int, required=True, help="Negative sampling rate of evaluation.")
+    parser.add_argument("--skip-forest", action="store_true", help="Skip enclosed subgraph collection and follow-ups.")
     parser.add_argument("--seed", type=int, required=True, help="Seed.")
     args = parser.parse_args()
 
@@ -192,6 +193,7 @@ def main() -> None:
         num_hops=args.num_hops,
         num_processes=args.num_processes,
         unit_process=args.unit_process,
+        skip_forest=args.skip_forest,
         device=torch.device("cpu"),
     )
     validator = etexood.frameworks.transform.Evaluator(
@@ -206,6 +208,7 @@ def main() -> None:
         num_hops=args.num_hops,
         num_processes=args.num_processes,
         unit_process=args.unit_process,
+        skip_forest=args.skip_forest,
         device=torch.device("cpu"),
     )
     tester = etexood.frameworks.transform.Evaluator(
@@ -220,6 +223,7 @@ def main() -> None:
         num_hops=args.num_hops,
         num_processes=args.num_processes,
         unit_process=args.unit_process,
+        skip_forest=args.skip_forest,
         device=torch.device("cpu"),
     )
 

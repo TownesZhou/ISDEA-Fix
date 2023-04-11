@@ -96,6 +96,7 @@ class HeuristicsForest0(object):
         num_hops: int,
         num_processes: int,
         unit: float,
+        pesudo: bool,
     ) -> None:
         R"""
         Reset.
@@ -116,6 +117,8 @@ class HeuristicsForest0(object):
             Number of processes for collection.
         - unit
             Time unit (second) to report progress per process.
+        - pseudo
+            If True, no collection will be performed even if the collection is explicitly called.
 
         Returns
         -------
@@ -131,6 +134,7 @@ class HeuristicsForest0(object):
         self._num_hops = num_hops
         self._num_processes = num_processes
         self._unit = unit
+        self._pseudo = pesudo
 
         #
         assert self._num_hops > 1, "Number of hops should be greater than 1 for heuristics to be useful."
@@ -147,6 +151,14 @@ class HeuristicsForest0(object):
         Returns
         -------
         """
+        #
+        if self._pseudo:
+            #
+            print("-" * 80)
+            print("Node forests are skipped.")
+            print("-" * 80)
+            return
+
         # Masks of reachable nodes at each layer of hop for all nodes.
         # Node pairs are independetly stored under the same directory for memory efficient loading.
         directory = os.path.join(self._cache, "hop{:d}.forest".format(self._num_hops))
@@ -487,6 +499,14 @@ class HeuristicsForest0(object):
         - heuristics
             Collected heuristics.
         """
+        #
+        if self._pseudo:
+            #
+            print("-" * 80)
+            print("Heuristics are skipped.")
+            print("-" * 80)
+            return
+
         # Ensure uniqueness.
         eids = onp.unique(pairs[0] * self._num_nodes + pairs[1])
         pairs = onp.stack((eids // self._num_nodes, eids % self._num_nodes))
@@ -782,7 +802,12 @@ class HeuristicsForest0(object):
             Collected heuristics.
         """
         #
-        return load(pairs, self._num_nodes, os.path.join(self._cache, "hop{:d}.heuristics".format(self._num_hops)))
+        if self._pseudo:
+            #
+            return onp.zeros((pairs.shape[1], 4), dtype=onp.int64)
+        else:
+            #
+            return load(pairs, self._num_nodes, os.path.join(self._cache, "hop{:d}.heuristics".format(self._num_hops)))
 
 
 class HeuristicsForest1(object):
@@ -804,6 +829,7 @@ class HeuristicsForest1(object):
         num_hops: int,
         num_processes: int,
         unit: float,
+        pseudo: bool,
     ) -> None:
         R"""
         Reset.
@@ -824,6 +850,8 @@ class HeuristicsForest1(object):
             Number of processes for collection.
         - unit
             Time unit (second) to report progress per process.
+        - pseudo
+            If True, no collection will be performed even if the collection is explicitly called.
 
         Returns
         -------
@@ -839,6 +867,7 @@ class HeuristicsForest1(object):
         self._num_hops = num_hops
         self._num_processes = num_processes
         self._unit = unit
+        self._pseudo = pseudo
 
         #
         assert self._num_hops > 1, "Number of hops should be greater than 1 for heuristics to be useful."
@@ -855,6 +884,14 @@ class HeuristicsForest1(object):
         Returns
         -------
         """
+        #
+        if self._pseudo:
+            #
+            print("-" * 80)
+            print("Cached forest is skipped.")
+            print("-" * 80)
+            return
+
         # Ensure uniqueness.
         eids = onp.unique(pairs[0] * self._num_nodes + pairs[1])
         pairs = onp.stack((eids // self._num_nodes, eids % self._num_nodes))
@@ -1202,6 +1239,14 @@ class HeuristicsForest1(object):
         - heuristics
             Collected heuristics.
         """
+        #
+        if self._pseudo:
+            #
+            print("-" * 80)
+            print("Heuristics are skipped.")
+            print("-" * 80)
+            return
+
         # Ensure uniqueness.
         eids = onp.unique(pairs[0] * self._num_nodes + pairs[1])
         pairs = onp.stack((eids // self._num_nodes, eids % self._num_nodes))
@@ -1496,4 +1541,9 @@ class HeuristicsForest1(object):
             Collected heuristics.
         """
         #
-        return load(pairs, self._num_nodes, os.path.join(self._cache, "hop{:d}.heuristics".format(self._num_hops)))
+        if self._pseudo:
+            #
+            return onp.zeros((pairs.shape[1], 4), dtype=onp.int64)
+        else:
+            #
+            return load(pairs, self._num_nodes, os.path.join(self._cache, "hop{:d}.heuristics".format(self._num_hops)))

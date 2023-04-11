@@ -199,6 +199,9 @@ def main() -> None:
     rels_valid.setflags(write=False)
 
     #
+    skip_forest = {"dss": True, "dist": False, "both": False}[args.ablate]
+
+    #
     logger.info("-- Load preprocessed schedule:")
     trainer = etexood.frameworks.transform.Trainer(
         logger,
@@ -212,6 +215,7 @@ def main() -> None:
         num_hops=args.num_hops,
         num_processes=args.num_processes,
         unit_process=args.unit_process,
+        skip_forest=skip_forest,
         device=torch.device(args.device),
     )
     validator = etexood.frameworks.transform.Evaluator(
@@ -226,6 +230,7 @@ def main() -> None:
         num_hops=args.num_hops,
         num_processes=args.num_processes,
         unit_process=args.unit_process,
+        skip_forest=skip_forest,
         device=torch.device(args.device),
     )
 

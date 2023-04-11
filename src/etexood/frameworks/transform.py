@@ -41,6 +41,7 @@ class Transformer(object):
         num_hops: int,
         num_processes: int,
         unit_process: float,
+        skip_forest: bool,
         device: torch.device,
     ) -> None:
         R"""
@@ -72,6 +73,8 @@ class Transformer(object):
             Number of processes.
         - unit_process
             Reporting time unit (second) for each process.
+        - skip_forest
+            Skip enclosed subgraph collection and follow-ups.
         - device
             Computation device.
 
@@ -90,6 +93,7 @@ class Transformer(object):
         self._num_hops = num_hops
         self._num_processes = num_processes
         self._unit_process = unit_process
+        self._skip_forest = skip_forest
         self._device = device
 
         # Safety check.
@@ -173,6 +177,7 @@ class Transformer(object):
                     num_hops=self._num_hops,
                     num_processes=self._num_processes,
                     unit=self._unit_process,
+                    pseudo=self._skip_forest,
                 ),
                 ComputationSubsetEdge(self._num_nodes, self._adjs, self._rels, num_hops=self._num_hops),
             )
@@ -272,6 +277,7 @@ class Transformer(object):
                 num_hops=self._num_hops,
                 num_processes=self._num_processes,
                 unit=self._unit_process,
+                pseudo=self._skip_forest,
             ),
             ComputationSubsetEdge(self._num_nodes, self._adjs, self._rels, num_hops=self._num_hops),
         )
