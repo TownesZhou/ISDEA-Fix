@@ -503,8 +503,8 @@ class MinibatchEdgeHeuristics(Minibatch):
             adjs_neg[0, corrupt_sub] = corrupts[corrupt_sub]
             adjs_neg[1, corrupt_obj] = corrupts[corrupt_obj]
 
-            # Repeat negative sampling 10 times to ensure no observation is used as negative.
-            for _ in range(10):
+            # Repeat negative sampling 1000 times to ensure no observation is used as negative.
+            for _ in range(1000):
                 # Get corrupted node IDs conflicting with observed data or itself, and sample again.
                 masks = onp.logical_or(
                     onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
