@@ -449,7 +449,7 @@ class Evaluator(Transformer):
         Returns
         -------
         - metrics
-            Tested metrics.
+            Evaluation metrics.
         - scores
             Scores for each batch.
         """
@@ -955,12 +955,14 @@ class Trainer(Transformer):
         optimizer: torch.optim.Optimizer,
         /,
         *,
+        ks: Sequence[int],
         negative_rate: int,
         margin: float,
         clip_grad_norm: float,
         eind: int,
         emax: int,
-    ) -> float:
+        eval_mode: bool,
+    ) -> Tuple[Dict[str, float], Sequence[NPFLOATS]]:
         R"""
         Tune model parameters by optimizer.
 
@@ -970,6 +972,8 @@ class Trainer(Transformer):
             Model used to generate embeddings.
         - name_loss
             Loss function name.
+        - ks
+            All k value to compute hit-at-k metrics.
         - optimizer
             Optimizer.
         - negative_rate
@@ -982,15 +986,32 @@ class Trainer(Transformer):
             Epoch ID.
         - emax
             Epoch maximum.
+        - eval_mode
+            If in the evaluation mode, the evaluation metrics will be computed, but the loss will not be backpropagated.
+            This can be used to compute the initial metric values before first epoch of training.
 
         Returns
         -------
-        - loss
-            Loss.
+        - metrics
+            Evaluation metrics.
+        - scores
+            Scores for each batch.
         """
         #
-        value = 0.0
-        count = 0
+        # value = 0.0
+        # count = 0
+        buf = []
+        name_loss2 = {"binary": "BCE", "distance": "Dist"}[name_loss]
+        values = {name_loss2: 0.0, "MR": 0.0, "MRR": 0.0, **{"Hit@{:d}".format(k): 0.0 for k in ks}}
+        counts = {name_loss2: 0, "MR": 0, "MRR": 0, **{"Hit@{:d}".format(k): 0 for k in ks}}
+
+        #
+        ranger = {
+            name_loss2: lambda _, n_samples: n_samples,
+            "MR": lambda n_pairs, _: n_pairs,
+            "MRR": lambda n_pairs, _: n_pairs,
+            **{"Hit@{:d}".format(k): lambda n_pairs, _: n_pairs for k in ks},
+        }
 
         #
         # \\:if self._sample in (self.HEURISTICS, self.BELLMAN):
@@ -1008,10 +1029,11 @@ class Trainer(Transformer):
             optimizer.zero_grad()
             if self._sample == self.HEURISTICS:
                 #
-                (loss, labels) = self.train_heuristics(
+                (loss, ranks, scores, labels) = self.train_heuristics(
                     bid,
                     model,
                     name_loss,
+                    ks=ks,
                     negative_rate=negative_rate,
                     margin=margin,
                 )
@@ -1033,16 +1055,30 @@ class Trainer(Transformer):
             # \\:        negative_rate=negative_rate,
             # \\:        margin=margin,
             # \\:    )
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad_norm)
-            optimizer.step()
+
+            # Backpropagation if not in evaluation mode
+            if not eval_mode:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad_norm)
+                optimizer.step()
+
+            # Record loss and evaluation metrics
+            buf.append(scores.data.cpu().numpy())
+            n_pairs = onp.sum(labels == 1).item()
+            n_samples = len(labels)
+            for key in set(values.keys()) | set(ranks.keys()):
+                #
+                values[key] += ranks[key] * float(ranger[key](n_pairs, n_samples))
+                counts[key] += int(ranger[key](n_pairs, n_samples))
 
             #
-            value += loss.item() * float(len(labels))
-            count += int(len(labels))
+            # value += loss.item() * float(len(labels))
+            # count += int(len(labels))
 
         #
-        return value / float(count)
+        # return value / float(count)
+        metrics = {key: values[key] / float(counts[key]) for key in values}
+        return (metrics, buf)
 
     def train_heuristics(
         self: SelfTrainer,
@@ -1051,9 +1087,10 @@ class Trainer(Transformer):
         name_loss: str,
         /,
         *,
+        ks: Sequence[int],
         negative_rate: int,
         margin: float,
-    ) -> Tuple[torch.Tensor, NPINTS]:
+    ) -> Tuple[torch.Tensor, Dict[str, float], torch.Tensor, NPINTS]:
         R"""
         Evaluate on heuristics-like input.
 
@@ -1065,6 +1102,8 @@ class Trainer(Transformer):
             Model used to generate embeddings.
         - name_loss
             Loss function name.
+        - ks
+            All k value to compute hit-at-k metrics.
         - negative_rate
             Negative rate.
         - margin
@@ -1117,7 +1156,7 @@ class Trainer(Transformer):
                 lbls_target_torch,
                 sample_negative_rate=negative_rate,
             )
-        elif name_loss == "distance":
+        else:
             #
             loss = model.loss_function_distance(
                 vrps,
@@ -1128,7 +1167,21 @@ class Trainer(Transformer):
                 sample_negative_rate=negative_rate,
                 margin=margin,
             )
-        return (loss, lbls_target_numpy)
+
+        # Measure the evaluation metrics on these training triplets
+        (ranks, scores) = model.metric_function_rank(
+            vrps,
+            adjs_target_torch,
+            rels_target_torch,
+            heus_target_torch,
+            lbls_target_torch,
+            sample_negative_rate=negative_rate,
+            ks=ks,
+        )
+        # Also record the loss value in the evaluation metrics, apart from directly returning the loss tensor
+        ranks[{"binary": "BCE", "distance": "Dist"}[name_loss]] = loss.item()
+
+        return (loss, ranks, scores, lbls_target_numpy)
 
 
 # \\:    def train_enclose(
