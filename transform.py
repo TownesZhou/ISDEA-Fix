@@ -79,7 +79,7 @@ def main() -> None:
         )
     suffix = "~".join(
         (
-            "e{:d}-ss{:d}".format(args.num_epochs, args.seed_schedule),
+            "ns{:d}-e{:d}-ss{:d}".format(args.num_neg_rels, args.num_epochs, args.seed_schedule),
             "l{:d}-sm{:d}".format(int(-math.log10(float(args.lr))), args.seed_model),
         )
     )
@@ -195,11 +195,13 @@ def main() -> None:
     # Adjust test negative ratio by half since test cases are augmented by twice.
     # For NBFNet negative sampling.
     test_negative_rate_eval = args.negative_rate_eval // 2
+    test_num_neg_rels_eval = args.num_neg_rels // 2
     tester.load(
         1,
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_test * (1 + test_negative_rate_eval),
         negative_rate=test_negative_rate_eval,
+        num_neg_rels=test_num_neg_rels_eval,
         seed=args.seed_schedule + 3,
         reusable_edge=True,
     )
@@ -255,6 +257,7 @@ def main() -> None:
         name_loss,
         ks=ks,
         negative_rate=test_negative_rate_eval,
+        num_neg_rels=test_num_neg_rels_eval,
         margin=args.margin,
         eind=args.num_epochs,
         emax=args.num_epochs,

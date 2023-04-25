@@ -393,9 +393,6 @@ class DSSGNNExcl(Model):
         torch.nn.Module.__init__(self)
 
         #
-        print("DSS+Opt:Sum/Mean+BatchNorm+Opt:Both/DSS/Dist")
-
-        #
         self.num_entities = num_entities
         self.num_relations = num_relations
         self.num_layers = num_layers

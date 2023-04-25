@@ -44,6 +44,12 @@ def main() -> None:
     parser.add_argument("--batch-size-edge-test", type=int, required=True, help="Batch size of test edge sampling.")
     parser.add_argument("--negative-rate-train", type=int, required=True, help="Negative sampling rate of training.")
     parser.add_argument("--negative-rate-eval", type=int, required=True, help="Negative sampling rate of evaluation.")
+    parser.add_argument(
+        "--num-neg-rels",
+        type=int,
+        required=True,
+        help="Number of negative relation samples of both training and evaluation.",
+    )
     parser.add_argument("--skip-forest", action="store_true", help="Skip enclosed subgraph collection and follow-ups.")
     parser.add_argument("--seed", type=int, required=True, help="Seed.")
     args = parser.parse_args()
@@ -60,7 +66,7 @@ def main() -> None:
 
     # Allocate logging disk space.
     prefix = "~".join((args.task, "dx{:d}".format(1 + int(args.bidirect))))
-    suffix = "e{:d}-s{:d}".format(args.num_epochs, args.seed)
+    suffix = "nr{:d}-e{:d}-s{:d}".format(args.num_neg_rels, args.num_epochs, args.seed)
     unique = etexood.loggings.create_framework_directory(
         os.path.join("logs", "schedule"),
         prefix,
@@ -237,6 +243,7 @@ def main() -> None:
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_train * (1 + args.negative_rate_train),
         negative_rate=args.negative_rate_train,
+        num_neg_rels=args.num_neg_rels,
         seed=args.seed + 1,
         reusable_edge=False,
     )
@@ -248,11 +255,15 @@ def main() -> None:
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_valid * (1 + args.negative_rate_eval),
         negative_rate=args.negative_rate_eval,
+        num_neg_rels=args.num_neg_rels,
         seed=args.seed + 2,
         reusable_edge=True,
     )
     logger.critical("-- Generate test schedule:")
+    assert args.negative_rate_eval % 2 == 0
+    assert args.num_neg_rels % 2 == 0
     test_negative_rate_eval = args.negative_rate_eval // 2
+    test_num_neg_rels = args.num_neg_rels // 2
     tester.generate(
         adjs_ind_test,
         rels_ind_test,
@@ -260,6 +271,7 @@ def main() -> None:
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_test * (1 + test_negative_rate_eval),
         negative_rate=test_negative_rate_eval,
+        num_neg_rels=test_num_neg_rels,
         seed=args.seed + 3,
         reusable_edge=True,
     )

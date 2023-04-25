@@ -281,6 +281,8 @@ class MinibatchEdgeHeuristics(Minibatch):
         heuristics: Union[HeuristicsForest0, HeuristicsForest1],
         subset: ComputationSubsetEdge,
         /,
+        *,
+        num_relations: int,
     ) -> SelfMinibatchEdgeHeuristics:
         R"""
         Register heuristics collector and subset sampler.
@@ -299,6 +301,7 @@ class MinibatchEdgeHeuristics(Minibatch):
         self._heuristics = heuristics
         self._subset = subset
         self._num_nodes = self._heuristics._num_nodes
+        self._num_relations = num_relations
 
         # Heuristics collector and subset sampler should work on the same graph.
         assert onp.all(self._heuristics._adjs == self._subset._adjs).all()
@@ -314,6 +317,7 @@ class MinibatchEdgeHeuristics(Minibatch):
         /,
         *,
         negative_rate: int,
+        num_neg_rels: int,
         rng: onp.random.RandomState,
         num_epochs: int,
         reusable: bool,
@@ -332,7 +336,9 @@ class MinibatchEdgeHeuristics(Minibatch):
         - batch_size
             Batch size.
         - negative_rate
-            Negative samples per positve training edges.
+            Negative samples per positive training edges.
+        - num_neg_rels
+            Negative relation samples per positive training edges.
         - rng
             Random state.
         - num_epochs
@@ -360,9 +366,14 @@ class MinibatchEdgeHeuristics(Minibatch):
         full = []
         for _ in range(num_epochs):
             # Generate negative samples ahead of each epoch
-            adjs1 = adjs
-            rels1 = rels
-            (adjs0, rels0) = self.negative(adjs1, rels1, negative_rate=negative_rate, rng=rng)
+            adjs_ps = adjs
+            rels_ps = rels
+            if negative_rate > 0:
+                #
+                (adjs_ng, rels_ng) = self.negative(adjs_ps, rels_ps, negative_rate=negative_rate, rng=rng)
+            if num_neg_rels > 0:
+                #
+                (adjs_nr, rels_nr) = self.negative_relations(adjs_ps, rels_ps, num=num_neg_rels, rng=rng)
 
             #
             buf = []
@@ -381,25 +392,46 @@ class MinibatchEdgeHeuristics(Minibatch):
 
                 #
                 indices_pos = indices[bgn:end]
-                adjs_pos = adjs1[:, indices_pos]
-                rels_pos = rels1[indices_pos]
+                adjs_pos = adjs_ps[:, indices_pos]
+                rels_pos = rels_ps[indices_pos]
                 lbls_pos = onp.ones_like(rels_pos)
+                buf_adjs = [adjs_pos]
+                buf_rels = [rels_pos]
+                buf_lbls = [lbls_pos]
 
                 # Generate negative samples correspond to positive samples.
-                indices_neg_base = onp.repeat(indices_pos, negative_rate) * negative_rate
-                indices_neg_bias = onp.tile(onp.arange(negative_rate), (len(indices_pos),))
-                indices_neg = indices_neg_base + indices_neg_bias
-                adjs_neg = adjs0[:, indices_neg]
-                rels_neg = rels0[indices_neg]
-                lbls_neg = onp.zeros_like(rels_neg)
+                if negative_rate > 0:
+                    #
+                    indices_neg_base = onp.repeat(indices_pos, negative_rate) * negative_rate
+                    indices_neg_bias = onp.tile(onp.arange(negative_rate), (len(indices_pos),))
+                    indices_neg = indices_neg_base + indices_neg_bias
+                    adjs_neg = adjs_ng[:, indices_neg]
+                    rels_neg = rels_ng[indices_neg]
+                    lbls_neg = onp.zeros_like(rels_neg)
+                    buf_adjs.append(adjs_neg)
+                    buf_rels.append(rels_neg)
+                    buf_lbls.append(lbls_neg)
+
+                # Generate negative relation samples correspond to positive samples.
+                if num_neg_rels > 0:
+                    #
+                    indices_ngr_base = onp.repeat(indices_pos, num_neg_rels) * num_neg_rels
+                    indices_ngr_bias = onp.tile(onp.arange(num_neg_rels), (len(indices_pos),))
+                    indices_ngr = indices_ngr_base + indices_ngr_bias
+                    adjs_ngr = adjs_nr[:, indices_ngr]
+                    rels_ngr = rels_nr[indices_ngr]
+                    lbls_ngr = onp.zeros_like(rels_ngr)
+                    buf_adjs.append(adjs_ngr)
+                    buf_rels.append(rels_ngr)
+                    buf_lbls.append(lbls_ngr)
 
                 #
                 buf.append(
                     onp.concatenate(
                         (
-                            onp.concatenate((adjs_pos, adjs_neg), axis=1),
-                            onp.expand_dims(onp.concatenate((rels_pos, rels_neg)), 0),
-                            onp.expand_dims(onp.concatenate((lbls_pos, lbls_neg)), 0),
+                            onp.concatenate(buf_adjs, axis=1),
+                            onp.expand_dims(onp.concatenate(buf_rels), 0),
+                            onp.expand_dims(onp.concatenate(buf_lbls), 0),
                         ),
                     ),
                 )
@@ -522,6 +554,87 @@ class MinibatchEdgeHeuristics(Minibatch):
                 corrupts = rng.choice(self._num_nodes, (len(rels_neg),), replace=True)
                 adjs_neg[0, masks_sub] = corrupts[masks_sub]
                 adjs_neg[1, masks_obj] = corrupts[masks_obj]
+
+            # If it still has cases where observation is used as negative, report as an error.
+            eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
+            assert onp.all(
+                onp.logical_not(onp.isin(eids_neg, eids_def)),
+            ).item(), "Observed edges are sampled as negative which is invalid."
+
+        #
+        return (adjs_neg, rels_neg)
+
+    def negative_relations(
+        self: SelfMinibatchEdgeHeuristics,
+        adjs_pos: NPINTS,
+        rels_pos: NPINTS,
+        /,
+        *,
+        num: int,
+        rng: onp.random.RandomState,
+    ) -> Tuple[NPINTS, NPINTS]:
+        R"""
+        Generate negative sample.
+
+        Args
+        ----
+        - adjs_pos
+            Positive adjacency list.
+        - rels_pos
+            Positive relations,
+        - num
+            Number of negative relation samples.
+        - rng
+            Random state.
+
+        Returns
+        -------
+        - adjs_neg
+            Negative adjacency list.
+        - rels_neg
+            Negative relations,
+        """
+        # Given observe edges in initialization should be treated as exclusive positive edges.
+        # Pay attention that given positive edges in arguments may not be exclusive, e.g., training.
+        adjs_def = self._subset._adjs
+        rels_def = self._subset._rels
+
+        #
+        adjs_pos = onp.repeat(adjs_pos, num, axis=1)
+        rels_pos = onp.repeat(rels_pos, num)
+        adjs_neg = adjs_pos.copy()
+        rels_neg = rels_pos.copy()
+
+        # Collect exclusive relational edge IDs.
+        # Since all nodes will be considered, node ID max is total number of nodes.
+        # Since only given relations will be considered, relation ID max is the maximum relation ID plus 1.
+        vmax = self._num_nodes
+        rmax = max(onp.max(rels_def).item(), onp.max(rels_def).item()) + 1
+        assert vmax**2 * rmax < 1e12
+
+        #
+        eids_def = (adjs_def[0] * vmax + adjs_def[1]) * rmax + rels_def
+
+        # For a negative sample of each positive sample, randomly corrupt its subject or object.
+        if num > 0:
+            # Generate corrupted node IDs for the first time.
+            corrupts = rng.choice(self._num_relations, (len(rels_neg),), replace=True)
+            rels_neg = corrupts
+
+            # Repeat negative sampling 10 times to ensure no observation is used as negative.
+            for _ in range(10):
+                # Get corrupted node IDs conflicting with observed data or itself, and sample again.
+                masks = onp.logical_or(
+                    onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
+                    onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+                )
+                if not onp.any(masks).item():
+                    #
+                    break
+
+                #
+                corrupts = rng.choice(self._num_relations, (len(rels_neg),), replace=True)
+                rels_neg[masks] = corrupts[masks]
 
             # If it still has cases where observation is used as negative, report as an error.
             eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg

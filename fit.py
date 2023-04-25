@@ -48,6 +48,12 @@ def main() -> None:
     parser.add_argument("--batch-size-edge-test", type=int, required=True, help="Batch size of test edge sampling.")
     parser.add_argument("--negative-rate-train", type=int, required=True, help="Negative sampling rate of training.")
     parser.add_argument("--negative-rate-eval", type=int, required=True, help="Negative sampling rate of evaluation.")
+    parser.add_argument(
+        "--num-neg-rels",
+        type=int,
+        required=True,
+        help="Number of negative relation samples of both training and evaluation.",
+    )
     parser.add_argument("--seed-schedule", type=int, required=True, help="Schedule seed.")
     parser.add_argument("--device", type=str, required=True, help="Device.")
     parser.add_argument("--model", type=str, required=True, help="Model.")
@@ -81,7 +87,7 @@ def main() -> None:
     )
     suffix = "~".join(
         (
-            "e{:d}-ss{:d}".format(args.num_epochs, args.seed_schedule),
+            "nr{:d}-e{:d}-ss{:d}".format(args.num_neg_rels, args.num_epochs, args.seed_schedule),
             "l{:d}-sm{:d}".format(int(-math.log10(float(args.lr))), args.seed_model),
         )
     )
@@ -240,6 +246,7 @@ def main() -> None:
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_train * (1 + args.negative_rate_train),
         negative_rate=args.negative_rate_train,
+        num_neg_rels=args.num_neg_rels,
         seed=args.seed_schedule + 1,
         reusable_edge=False,
     )
@@ -248,6 +255,7 @@ def main() -> None:
         batch_size_node=args.batch_size_node,
         batch_size_edge=args.batch_size_edge_valid * (1 + args.negative_rate_eval),
         negative_rate=args.negative_rate_eval,
+        num_neg_rels=args.num_neg_rels,
         seed=args.seed_schedule + 2,
         reusable_edge=True,
     )
@@ -278,7 +286,7 @@ def main() -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     #
-    ks = [int(msg) for msg in re.split(r"\s*,\s*", args.ks)]
+    ks = list(sorted([int(msg) for msg in re.split(r"\s*,\s*", args.ks)]))
     LOSS = {"binary": "BCE", "distance": "Dist"}[loss]
 
     # Initial evaluation.
@@ -287,12 +295,20 @@ def main() -> None:
         loss,
         ks=ks,
         negative_rate=args.negative_rate_eval,
+        num_neg_rels=args.num_neg_rels,
         margin=args.margin,
         eind=0,
         emax=args.num_epochs,
     )
     buf = [metrics]
-    metric_pair = (-metrics["MR"], metrics["MRR"], *(metrics["Hit@{:d}".format(k)] for k in ks), -metrics[LOSS])
+    metric_pair = (
+        *(metrics["Hit@{:d}".format(k)] for k in reversed(ks)),
+        metrics["MRR"],
+        -metrics["MR"],
+        -metrics[LOSS],
+        -metrics["{:s}-Ent".format(LOSS)],
+        -metrics["{:s}-Rel".format(LOSS)],
+    )
     metric_best = metric_pair
     torch.save(model.state_dict(), os.path.join(unique, "parameters"))
     num_no_improves = 0
@@ -313,6 +329,7 @@ def main() -> None:
             loss,
             optimizer,
             negative_rate=args.negative_rate_train,
+            num_neg_rels=args.num_neg_rels,
             margin=args.margin,
             clip_grad_norm=args.clip_grad_norm,
             eind=eind,
@@ -325,12 +342,20 @@ def main() -> None:
             loss,
             ks=ks,
             negative_rate=args.negative_rate_eval,
+            num_neg_rels=args.num_neg_rels,
             margin=args.margin,
             eind=eind,
             emax=args.num_epochs,
         )
         buf.append(metrics)
-        metric_pair = (-metrics["MR"], metrics["MRR"], *(metrics["Hit@{:d}".format(k)] for k in ks), -metrics[LOSS])
+        metric_pair = (
+            *(metrics["Hit@{:d}".format(k)] for k in reversed(ks)),
+            metrics["MRR"],
+            -metrics["MR"],
+            -metrics[LOSS],
+            -metrics["{:s}-Ent".format(LOSS)],
+            -metrics["{:s}-Rel".format(LOSS)],
+        )
         if metric_best < metric_pair:
             #
             metric_best = metric_pair
