@@ -12,13 +12,10 @@ task=FD2
 nr=0
 model=dssgnn
 aggr="mean"
-ablate="dss"
+ablate="both"
 seed=58
 lrexp=3
 epoch=50
-
-#
-rm -rf logs
 
 #
 rm -rf logs/cache/${task}*
@@ -31,8 +28,8 @@ rm -rf logs/schedule/${task}~dx2:_:nr${nr}-e${epoch}-s${seed}
     --num-hops 2 --num-processes 4 --unit-process 60.0 --num-epochs ${epoch} \
     --batch-size-node 128 --batch-size-edge-train 256 --batch-size-edge-valid 256 --batch-size-edge-test 256 \
     --negative-rate-train 2 --negative-rate-eval 50 --num-neg-rels ${nr} \
-    --skip-forest \
     --seed ${seed}
+# --skip-forest
 
 #
 rm -rf logs/fit/${task}~dx2~${model}-${aggr}-${ablate}:_:nr${nr}-e${epoch}-ss${seed}~l${lrexp}-sm${seed}
