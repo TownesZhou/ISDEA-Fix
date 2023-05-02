@@ -206,6 +206,7 @@ class Model(abc.ABC, torch.nn.Module):
         /,
         *,
         sample_negative_rate: int,
+        sample_num_neg_rels: int,
     ) -> None:
         R"""
         Ensure loss function inputs are proper.
@@ -224,6 +225,8 @@ class Model(abc.ABC, torch.nn.Module):
             Binary labels to be evaluated.
         - sample_negative_rate
             Negative sampling rate.
+        - sample_num_neg_rels
+            Number of negative relation samples.
 
         Returns
         -------
@@ -232,24 +235,41 @@ class Model(abc.ABC, torch.nn.Module):
         assert lbls.dtype == torch.get_default_dtype(), "Improper label dtype."
 
         #
-        num = len(lbls) // (1 + sample_negative_rate)
+        num = len(lbls) // (1 + sample_negative_rate + sample_num_neg_rels)
 
         #
-        assert len(lbls) % (1 + sample_negative_rate) == 0, "Improper number of total samples."
+        assert len(lbls) % (1 + sample_negative_rate + sample_num_neg_rels) == 0, "Improper number of total samples."
         assert torch.all(lbls[:num] == 1).item(), "Headings must be positive samples, which is not."
         assert torch.all(lbls[num:] == 0).item(), "Tailings must be negative samples, which is not."
 
         #
         adjs_pos = torch.reshape(adjs[:, :num], (2, num, 1))
-        adjs_neg = torch.reshape(adjs[:, num:], (2, num, sample_negative_rate))
         rels_pos = torch.reshape(rels[:num], (num, 1))
-        rels_neg = torch.reshape(rels[num:], (num, sample_negative_rate))
+        ptr = num
+        if sample_negative_rate > 0:
+            #
+            adjs_neg = torch.reshape(adjs[:, ptr : ptr + num * sample_negative_rate], (2, num, sample_negative_rate))
+            rels_neg = torch.reshape(rels[ptr : ptr + num * sample_negative_rate], (num, sample_negative_rate))
+            ptr += num * sample_negative_rate
+        if sample_num_neg_rels > 0:
+            #
+            adjs_ngr = torch.reshape(adjs[:, ptr : ptr + num * sample_num_neg_rels], (2, num, sample_num_neg_rels))
+            rels_ngr = torch.reshape(rels[ptr : ptr + num * sample_num_neg_rels], (num, sample_num_neg_rels))
+            ptr += num * sample_num_neg_rels
 
         #
-        assert torch.all(rels_pos == rels_neg).item(), "Negative samples should not change relation type."
-        assert torch.all(
-            torch.logical_or(adjs_pos[0] == adjs_neg[0], adjs_pos[1] == adjs_neg[1])
-        ).item(), "Negative samples should not change both subject and object."
+        assert ptr == len(rels), "More than positive and negative, which should not have."
+        if sample_negative_rate > 0:
+            #
+            assert torch.all(
+                torch.logical_or(adjs_pos[0] == adjs_neg[0], adjs_pos[1] == adjs_neg[1])
+            ).item(), "Negative samples should not change both subject and object."
+            assert torch.all(rels_pos == rels_neg).item(), "Negative samples should not change relation type."
+        if sample_num_neg_rels > 0:
+            #
+            assert torch.all(
+                torch.logical_and(adjs_pos[0] == adjs_ngr[0], adjs_pos[1] == adjs_ngr[1])
+            ).item(), "Negative relation samples should not change subject or object."
 
     def loss_function_distance(
         self: SelfModel,
@@ -261,8 +281,9 @@ class Model(abc.ABC, torch.nn.Module):
         /,
         *,
         sample_negative_rate: int,
+        sample_num_neg_rels: int,
         margin: float,
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         R"""
         Loss function for embedding distance.
 
@@ -280,6 +301,8 @@ class Model(abc.ABC, torch.nn.Module):
             Binary labels to be evaluated.
         - sample_negative_rate
             Negative sampling rate.
+        - sample_num_neg_rels
+            Number of negative relation samples.
         - margin
             Margin value (gamma).
 
@@ -287,17 +310,45 @@ class Model(abc.ABC, torch.nn.Module):
         -------
         - loss
             Loss.
+        - auxiliaries
+            Auxiliary losses.
         """
         #
         dists = self.measure_distance(vrps, adjs, rels, heus)
 
+        #
+        num = len(lbls) // (1 + sample_negative_rate + sample_num_neg_rels)
+        dists_pos = torch.reshape(dists[:num], (num, 1))
+        ptr = num
+        if sample_negative_rate > 0:
+            #
+            dists_neg = torch.reshape(dists[ptr : ptr + num * sample_negative_rate], (num, sample_negative_rate))
+            ptr += num * sample_negative_rate
+        if sample_num_neg_rels > 0:
+            #
+            dists_ngr = torch.reshape(dists[ptr : ptr + num * sample_num_neg_rels], (num, sample_num_neg_rels))
+            ptr += num * sample_num_neg_rels
+
         # Compute mean over postive-against-negative pairs to match with binary classification loss function.
         # To use SGD, we take negative distance measurement as loss.
-        num = len(lbls) // (1 + sample_negative_rate)
-        dists_pos = torch.reshape(dists[:num], (num, 1))
-        dists_neg = torch.reshape(dists[num:], (num, sample_negative_rate))
-        loss = -torch.mean(F.relu(dists_neg - dists_pos + margin))
-        return loss
+        if sample_negative_rate > 0:
+            #
+            loss_ent = -torch.mean(F.relu(dists_neg - dists_pos + margin))
+        else:
+            #
+            loss_ent = torch.tensor(0.0, dtype=dists.dtype, device=dists.device)
+
+        #
+        if sample_num_neg_rels > 0:
+            #
+            loss_rel = -torch.mean(F.relu(dists_ngr - dists_pos + margin))
+        else:
+            #
+            loss_rel = torch.tensor(0.0, dtype=dists.dtype, device=dists.device)
+
+        #
+        loss = loss_ent + loss_rel
+        return loss, (loss_ent.item(), loss_rel.item())
 
     def loss_function_binary(
         self: SelfModel,
@@ -309,7 +360,8 @@ class Model(abc.ABC, torch.nn.Module):
         /,
         *,
         sample_negative_rate: int,
-    ) -> torch.Tensor:
+        sample_num_neg_rels: int,
+    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         R"""
         Loss function for binary classification.
 
@@ -327,19 +379,72 @@ class Model(abc.ABC, torch.nn.Module):
             Binary labels to be evaluated.
         - sample_negative_rate
             Negative sampling rate.
+        - sample_num_neg_rels
+            Number of negative relation samples.
 
         Returns
         -------
         - loss
             Loss.
+        - auxiliaries
+            Auxiliary losses.
         """
         #
         scrs = self.measure_score(vrps, adjs, rels, heus)
 
         #
-        weights = torch.tensor([sample_negative_rate], dtype=scrs.dtype, device=scrs.device)
-        loss = F.binary_cross_entropy_with_logits(scrs, lbls, pos_weight=weights)
-        return loss
+        num = len(lbls) // (1 + sample_negative_rate + sample_num_neg_rels)
+        scrs_pos = torch.reshape(scrs[:num], (num, 1))
+        lbls_pos = torch.reshape(lbls[:num], (num, 1))
+        ptr = num
+        if sample_negative_rate > 0:
+            #
+            scrs_neg = torch.reshape(scrs[ptr : ptr + num * sample_negative_rate], (num, sample_negative_rate))
+            lbls_neg = torch.reshape(lbls[ptr : ptr + num * sample_negative_rate], (num, sample_negative_rate))
+            ptr += num * sample_negative_rate
+        if sample_num_neg_rels > 0:
+            #
+            scrs_ngr = torch.reshape(scrs[ptr : ptr + num * sample_num_neg_rels], (num, sample_num_neg_rels))
+            lbls_ngr = torch.reshape(lbls[ptr : ptr + num * sample_num_neg_rels], (num, sample_num_neg_rels))
+            ptr += num * sample_num_neg_rels
+
+        #
+        if sample_negative_rate > 0:
+            #
+            weights_ent = torch.tensor([sample_negative_rate], dtype=scrs.dtype, device=scrs.device)
+            loss_ent = F.binary_cross_entropy_with_logits(
+                torch.concatenate(
+                    (torch.reshape(scrs_pos, (num,)), torch.reshape(scrs_neg, (num * sample_negative_rate,))),
+                ),
+                torch.concatenate(
+                    (torch.reshape(lbls_pos, (num,)), torch.reshape(lbls_neg, (num * sample_negative_rate,))),
+                ),
+                pos_weight=weights_ent,
+            )
+        else:
+            #
+            loss_ent = torch.tensor(0.0, dtype=scrs.dtype, device=scrs.device)
+
+        #
+        if sample_num_neg_rels > 0:
+            #
+            weights_rel = torch.tensor([sample_num_neg_rels], dtype=scrs.dtype, device=scrs.device)
+            loss_rel = F.binary_cross_entropy_with_logits(
+                torch.concatenate(
+                    (torch.reshape(scrs_pos, (num,)), torch.reshape(scrs_ngr, (num * sample_num_neg_rels,))),
+                ),
+                torch.concatenate(
+                    (torch.reshape(lbls_pos, (num,)), torch.reshape(lbls_ngr, (num * sample_num_neg_rels,))),
+                ),
+                pos_weight=weights_rel,
+            )
+        else:
+            #
+            loss_rel = torch.tensor(0.0, dtype=scrs.dtype, device=scrs.device)
+
+        #
+        loss = loss_ent + loss_rel
+        return loss, (loss_ent.item(), loss_rel.item())
 
     def metric_function_rank(
         self: SelfModel,
@@ -351,6 +456,7 @@ class Model(abc.ABC, torch.nn.Module):
         /,
         *,
         sample_negative_rate: int,
+        sample_num_neg_rels: int,
         ks: Sequence[int],
     ) -> Tuple[Dict[str, float], torch.Tensor]:
         R"""
@@ -372,6 +478,8 @@ class Model(abc.ABC, torch.nn.Module):
             Against-pairs should already be included.
         - sample_negative_rate
             Negative sampling rate.
+        - sample_num_neg_rels
+            Number of negative relation samples.
         - ks
             All k value to compute hit-at-k metrics.
 
@@ -386,9 +494,17 @@ class Model(abc.ABC, torch.nn.Module):
         scores = self.measure_score(vrps, adjs, rels, heus)
 
         # Ensure rankable data shape is easy for compare positive with negative.
-        num = len(lbls) // (1 + sample_negative_rate)
+        num = len(lbls) // (1 + sample_negative_rate + sample_num_neg_rels)
         scores_pos = torch.reshape(scores[:num], (num, 1))
-        scores_neg = torch.reshape(scores[num:], (num, sample_negative_rate))
+        ptr = num
+        if sample_negative_rate > 0:
+            #
+            scores_neg = torch.reshape(scores[ptr : ptr + num * sample_negative_rate], (num, sample_negative_rate))
+            ptr += num * sample_negative_rate
+        if sample_num_neg_rels > 0:
+            #
+            scores_ngr = torch.reshape(scores[ptr : ptr + num * sample_num_neg_rels], (num, sample_num_neg_rels))
+            ptr += num * sample_num_neg_rels
 
         #
         # \\:rankables = torch.cat((scores_pos, scores_neg), dim=1)

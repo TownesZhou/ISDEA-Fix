@@ -129,6 +129,7 @@ class Transformer(object):
         batch_size_node: int,
         batch_size_edge: int,
         negative_rate: int,
+        num_neg_rels: int,
         seed: int,
         reusable_edge: bool,
     ) -> None:
@@ -151,6 +152,8 @@ class Transformer(object):
             This is used for computing loss or metric for all given edges with negative samples.
         - negative_rate
             Negative sampling rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - seed
             Random seed for generation.
         - resuable_edge
@@ -180,6 +183,7 @@ class Transformer(object):
                     pseudo=self._skip_forest,
                 ),
                 ComputationSubsetEdge(self._num_nodes, self._adjs, self._rels, num_hops=self._num_hops),
+                num_relations=self._num_relations * int(1 + self._bidirect),
             )
 
         #
@@ -191,11 +195,23 @@ class Transformer(object):
         if self._sample in (self.HEURISTICS, self.BELLMAN):
             #
             self._minibatch_edge_heuristics.generate(
-                "~".join(("edge", "e{:d}-b{:d}-n{:d}-s{:d}".format(num_epochs, batch_size_edge, negative_rate, seed))),
+                "~".join(
+                    (
+                        "edge",
+                        "e{:d}-b{:d}-n{:d}-r{:d}-s{:d}".format(
+                            num_epochs,
+                            batch_size_edge,
+                            negative_rate,
+                            num_neg_rels,
+                            seed,
+                        ),
+                    )
+                ),
                 adjs,
                 rels,
                 batch_size_edge,
                 negative_rate=negative_rate,
+                num_neg_rels=num_neg_rels,
                 rng=onp.random.RandomState(seed),
                 num_epochs=num_epochs,
                 reusable=reusable_edge,
@@ -209,6 +225,7 @@ class Transformer(object):
         batch_size_node: int,
         batch_size_edge: int,
         negative_rate: int,
+        num_neg_rels: int,
         seed: int,
         reusable_edge: bool,
     ) -> None:
@@ -227,6 +244,8 @@ class Transformer(object):
             This is used for computing loss or metric for all given edges with negative samples.
         - negative_rate
             Negative sampling rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - seed
             Random seed for generation.
         - resuable_edge
@@ -280,6 +299,7 @@ class Transformer(object):
                 pseudo=self._skip_forest,
             ),
             ComputationSubsetEdge(self._num_nodes, self._adjs, self._rels, num_hops=self._num_hops),
+            num_relations=self._num_relations * int(1 + self._bidirect),
         )
 
         #
@@ -297,7 +317,18 @@ class Transformer(object):
         # \\:    )
         # \\:    self._minibatch_edge_enclose.reusable = reusable_edge
         self._minibatch_edge_heuristics.load(
-            "~".join(("edge", "e{:d}-b{:d}-n{:d}-s{:d}".format(num_epochs, batch_size_edge, negative_rate, seed))),
+            "~".join(
+                (
+                    "edge",
+                    "e{:d}-b{:d}-n{:d}-r{:d}-s{:d}".format(
+                        num_epochs,
+                        batch_size_edge,
+                        negative_rate,
+                        num_neg_rels,
+                        seed,
+                    ),
+                )
+            ),
         )
         self._minibatch_edge_heuristics.reusable = reusable_edge
 
@@ -369,6 +400,7 @@ class Evaluator(Transformer):
         batch_size_node: int,
         batch_size_edge: int,
         negative_rate: int,
+        num_neg_rels: int,
         seed: int,
         reusable_edge: bool,
     ) -> None:
@@ -391,6 +423,8 @@ class Evaluator(Transformer):
             This is used for computing loss or metric for all given edges with negative samples.
         - negative_rate
             Negative sampling rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - seed
             Random seed for generation.
         - resuable_edge
@@ -409,6 +443,7 @@ class Evaluator(Transformer):
             batch_size_node=batch_size_node,
             batch_size_edge=batch_size_edge,
             negative_rate=negative_rate,
+            num_neg_rels=num_neg_rels,
             seed=seed,
             reusable_edge=reusable_edge,
         )
@@ -422,6 +457,7 @@ class Evaluator(Transformer):
         *,
         ks: Sequence[int],
         negative_rate: int,
+        num_neg_rels: int,
         margin: float,
         eind: int,
         emax: int,
@@ -439,6 +475,8 @@ class Evaluator(Transformer):
             All k value to compute hit-at-k metrics.
         - negative_rate
             Negative rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - margin
             Distance margin.
         - eind
@@ -455,16 +493,22 @@ class Evaluator(Transformer):
         """
         #
         buf = []
-        name_loss2 = {"binary": "BCE", "distance": "Dist"}[name_loss]
-        values = {name_loss2: 0.0, "MR": 0.0, "MRR": 0.0, **{"Hit@{:d}".format(k): 0.0 for k in ks}}
-        counts = {name_loss2: 0, "MR": 0, "MRR": 0, **{"Hit@{:d}".format(k): 0 for k in ks}}
-
-        #
-        ranger = {
-            name_loss2: lambda _, n_samples: n_samples,
-            "MR": lambda n_pairs, _: n_pairs,
-            "MRR": lambda n_pairs, _: n_pairs,
-            **{"Hit@{:d}".format(k): lambda n_pairs, _: n_pairs for k in ks},
+        abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
+        values = {
+            **{"Hit@{:d}".format(k): 0.0 for k in reversed(ks)},
+            "MRR": 0.0,
+            "MR": 0.0,
+            abbr_loss: 0.0,
+            "{:s}-Ent".format(abbr_loss): 0.0,
+            "{:s}-Rel".format(abbr_loss): 0.0,
+        }
+        counts = {
+            **{"Hit@{:d}".format(k): 0 for k in reversed(ks)},
+            "MRR": 0,
+            "MR": 0,
+            abbr_loss: 0,
+            "{:s}-Ent".format(abbr_loss): 0,
+            "{:s}-Rel".format(abbr_loss): 0,
         }
 
         #
@@ -488,6 +532,7 @@ class Evaluator(Transformer):
                     name_loss,
                     ks=ks,
                     negative_rate=negative_rate,
+                    num_neg_rels=num_neg_rels,
                     margin=margin,
                 )
             # \\:elif self._sample == self.ENCLOSE:
@@ -514,11 +559,10 @@ class Evaluator(Transformer):
             #
             buf.append(scores.data.cpu().numpy())
             n_pairs = onp.sum(labels == 1).item()
-            n_samples = len(labels)
             for key in set(values.keys()) | set(ranks.keys()):
                 #
-                values[key] += ranks[key] * float(ranger[key](n_pairs, n_samples))
-                counts[key] += int(ranger[key](n_pairs, n_samples))
+                values[key] += ranks[key] * float(n_pairs)
+                counts[key] += n_pairs
 
         #
         metrics = {key: values[key] / float(counts[key]) for key in values}
@@ -533,6 +577,7 @@ class Evaluator(Transformer):
         *,
         ks: Sequence[int],
         negative_rate: int,
+        num_neg_rels: int,
         margin: float,
     ) -> Tuple[Dict[str, float], torch.Tensor, NPINTS]:
         R"""
@@ -550,6 +595,8 @@ class Evaluator(Transformer):
             All k value to compute hit-at-k metrics.
         - negative_rate
             Negative rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - margin
             Distance margin.
 
@@ -600,27 +647,30 @@ class Evaluator(Transformer):
             heus_target_torch,
             lbls_target_torch,
             sample_negative_rate=negative_rate,
+            sample_num_neg_rels=num_neg_rels,
         )
         assert name_loss in ("binary", "distance")
         if name_loss == "binary":
             #
-            loss = model.loss_function_binary(
+            (loss, (loss_ent, loss_rel)) = model.loss_function_binary(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
                 heus_target_torch,
                 lbls_target_torch,
                 sample_negative_rate=negative_rate,
+                sample_num_neg_rels=num_neg_rels,
             )
         elif name_loss == "distance":
             #
-            loss = model.loss_function_distance(
+            (loss, (loss_ent, loss_rel)) = model.loss_function_distance(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
                 heus_target_torch,
                 lbls_target_torch,
                 sample_negative_rate=negative_rate,
+                sample_num_neg_rels=num_neg_rels,
                 margin=margin,
             )
 
@@ -632,9 +682,13 @@ class Evaluator(Transformer):
             heus_target_torch,
             lbls_target_torch,
             sample_negative_rate=negative_rate,
+            sample_num_neg_rels=num_neg_rels,
             ks=ks,
         )
-        ranks[{"binary": "BCE", "distance": "Dist"}[name_loss]] = loss.item()
+        abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
+        ranks[abbr_loss] = loss.item()
+        ranks["{:s}-Ent".format(abbr_loss)] = loss_ent
+        ranks["{:s}-Rel".format(abbr_loss)] = loss_rel
 
         #
         return (ranks, scores, lbls_target_numpy)
@@ -904,6 +958,7 @@ class Trainer(Transformer):
         batch_size_node: int,
         batch_size_edge: int,
         negative_rate: int,
+        num_neg_rels: int,
         seed: int,
         reusable_edge: bool,
     ) -> None:
@@ -926,6 +981,8 @@ class Trainer(Transformer):
             This is used for computing loss or metric for all given edges with negative samples.
         - negative_rate
             Negative sampling rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - seed
             Random seed for generation.
         - resuable_edge
@@ -944,6 +1001,7 @@ class Trainer(Transformer):
             batch_size_node=batch_size_node,
             batch_size_edge=batch_size_edge,
             negative_rate=negative_rate,
+            num_neg_rels=num_neg_rels,
             seed=seed,
             reusable_edge=reusable_edge,
         )
@@ -957,6 +1015,7 @@ class Trainer(Transformer):
         *,
         ks: Sequence[int],
         negative_rate: int,
+        num_neg_rels: int,
         margin: float,
         clip_grad_norm: float,
         eind: int,
@@ -978,6 +1037,8 @@ class Trainer(Transformer):
             Optimizer.
         - negative_rate
             Negative rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - margin
             Distance margin.
         - clip_grad_norm
@@ -1035,6 +1096,7 @@ class Trainer(Transformer):
                     name_loss,
                     ks=ks,
                     negative_rate=negative_rate,
+                    num_neg_rels=num_neg_rels,
                     margin=margin,
                 )
             # \\:elif self._sample == self.ENCLOSE:
@@ -1089,6 +1151,7 @@ class Trainer(Transformer):
         *,
         ks: Sequence[int],
         negative_rate: int,
+        num_neg_rels: int,
         margin: float,
     ) -> Tuple[torch.Tensor, Dict[str, float], torch.Tensor, NPINTS]:
         R"""
@@ -1106,6 +1169,8 @@ class Trainer(Transformer):
             All k value to compute hit-at-k metrics.
         - negative_rate
             Negative rate.
+        - num_neg_rels
+            Number of negative relation samples.
         - margin
             Distance margin.
 
@@ -1148,23 +1213,25 @@ class Trainer(Transformer):
         assert name_loss in ("binary", "distance")
         if name_loss == "binary":
             #
-            loss = model.loss_function_binary(
+            (loss, _) = model.loss_function_binary(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
                 heus_target_torch,
                 lbls_target_torch,
                 sample_negative_rate=negative_rate,
+                sample_num_neg_rels=num_neg_rels,
             )
         else:
             #
-            loss = model.loss_function_distance(
+            (loss, _) = model.loss_function_distance(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
                 heus_target_torch,
                 lbls_target_torch,
                 sample_negative_rate=negative_rate,
+                sample_num_neg_rels=num_neg_rels,
                 margin=margin,
             )
 
