@@ -495,18 +495,28 @@ class Evaluator(Transformer):
         buf = []
         abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
         values = {
-            **{"Hit@{:d}".format(k): 0.0 for k in reversed(ks)},
-            "MRR": 0.0,
-            "MR": 0.0,
+            **{"Hit@{:d}-Ent".format(k): 0.0 for k in reversed(ks)},
+            **{"Hit@{:d}-Rel".format(k): 0.0 for k in reversed(ks)},
+            "MRR-Ent": 0.0,
+            "MRR-Rel": 0.0,
+            "MR-Ent": 0.0,
+            "MR-Rel": 0.0,
             abbr_loss: 0.0,
+            f"{abbr_loss}-Ent": 0.0,
+            f"{abbr_loss}-Rel": 0.0,
             "{:s}-Ent".format(abbr_loss): 0.0,
             "{:s}-Rel".format(abbr_loss): 0.0,
         }
         counts = {
-            **{"Hit@{:d}".format(k): 0 for k in reversed(ks)},
-            "MRR": 0,
-            "MR": 0,
+            **{"Hit@{:d}-Ent".format(k): 0 for k in reversed(ks)},
+            **{"Hit@{:d}-Rel".format(k): 0 for k in reversed(ks)},
+            "MRR-Ent": 0,
+            "MRR-Rel": 0,
+            "MR-Ent": 0,
+            "MR-Rel": 0,
             abbr_loss: 0,
+            f"{abbr_loss}-Ent": 0,
+            f"{abbr_loss}-Rel": 0,
             "{:s}-Ent".format(abbr_loss): 0,
             "{:s}-Rel".format(abbr_loss): 0,
         }
@@ -687,8 +697,8 @@ class Evaluator(Transformer):
         )
         abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
         ranks[abbr_loss] = loss.item()
-        ranks["{:s}-Ent".format(abbr_loss)] = loss_ent
-        ranks["{:s}-Rel".format(abbr_loss)] = loss_rel
+        ranks["{:s}-Ent".format(abbr_loss)] = loss_ent.item()
+        ranks["{:s}-Rel".format(abbr_loss)] = loss_rel.item()
 
         #
         return (ranks, scores, lbls_target_numpy)
@@ -1021,6 +1031,7 @@ class Trainer(Transformer):
         eind: int,
         emax: int,
         eval_mode: bool,
+        loss_type: str,
     ) -> Tuple[Dict[str, float], Sequence[NPFLOATS]]:
         R"""
         Tune model parameters by optimizer.
@@ -1050,6 +1061,8 @@ class Trainer(Transformer):
         - eval_mode
             If in the evaluation mode, the evaluation metrics will be computed, but the loss will not be backpropagated.
             This can be used to compute the initial metric values before first epoch of training.
+        - loss_type
+            The type of loss function to use. Should be one of "both", "entity", "relation".
 
         Returns
         -------
@@ -1061,17 +1074,55 @@ class Trainer(Transformer):
         #
         # value = 0.0
         # count = 0
+        assert loss_type in ("both", "entity", "relation")
         buf = []
-        name_loss2 = {"binary": "BCE", "distance": "Dist"}[name_loss]
-        values = {name_loss2: 0.0, "MR": 0.0, "MRR": 0.0, **{"Hit@{:d}".format(k): 0.0 for k in ks}}
-        counts = {name_loss2: 0, "MR": 0, "MRR": 0, **{"Hit@{:d}".format(k): 0 for k in ks}}
+        abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
+        values = {
+            **{"Hit@{:d}-Ent".format(k): 0.0 for k in reversed(ks)},
+            **{"Hit@{:d}-Rel".format(k): 0.0 for k in reversed(ks)},
+            "MRR-Ent": 0.0,
+            "MRR-Rel": 0.0,
+            "MR-Ent": 0.0,
+            "MR-Rel": 0.0,
+            abbr_loss: 0.0,
+            f"{abbr_loss}-Ent": 0.0,
+            f"{abbr_loss}-Rel": 0.0,
+            "{:s}-Ent".format(abbr_loss): 0.0,
+            "{:s}-Rel".format(abbr_loss): 0.0,
+        }
+        counts = {
+            **{"Hit@{:d}-Ent".format(k): 0 for k in reversed(ks)},
+            **{"Hit@{:d}-Rel".format(k): 0 for k in reversed(ks)},
+            "MRR-Ent": 0,
+            "MRR-Rel": 0,
+            "MR-Ent": 0,
+            "MR-Rel": 0,
+            abbr_loss: 0,
+            f"{abbr_loss}-Ent": 0,
+            f"{abbr_loss}-Rel": 0,
+            "{:s}-Ent".format(abbr_loss): 0,
+            "{:s}-Rel".format(abbr_loss): 0,
+        }
 
         #
+        # ranger = {
+        #     name_loss2: lambda _, n_samples: n_samples,
+        #     "MR": lambda n_pairs, _: n_pairs,
+        #     "MRR": lambda n_pairs, _: n_pairs,
+        #     **{"Hit@{:d}".format(k): lambda n_pairs, _: n_pairs for k in ks},
+        # }
         ranger = {
-            name_loss2: lambda _, n_samples: n_samples,
-            "MR": lambda n_pairs, _: n_pairs,
-            "MRR": lambda n_pairs, _: n_pairs,
-            **{"Hit@{:d}".format(k): lambda n_pairs, _: n_pairs for k in ks},
+            **{"Hit@{:d}-Ent".format(k): lambda n_pairs, _: n_pairs for k in reversed(ks)},
+            **{"Hit@{:d}-Rel".format(k): lambda n_pairs, _: n_pairs for k in reversed(ks)},
+            "MRR-Ent": lambda n_pairs, _: n_pairs,
+            "MRR-Rel": lambda n_pairs, _: n_pairs,
+            "MR-Ent": lambda n_pairs, _: n_pairs,
+            "MR-Rel": lambda n_pairs, _: n_pairs,
+            abbr_loss: lambda _, n_samples: n_samples,
+            f"{abbr_loss}-Ent": lambda _, n_samples: n_samples,
+            f"{abbr_loss}-Rel": lambda _, n_samples: n_samples,
+            "{:s}-Ent".format(abbr_loss): lambda _, n_samples: n_samples,
+            "{:s}-Rel".format(abbr_loss): lambda _, n_samples: n_samples,
         }
 
         #
@@ -1090,7 +1141,7 @@ class Trainer(Transformer):
             optimizer.zero_grad()
             if self._sample == self.HEURISTICS:
                 #
-                (loss, ranks, scores, labels) = self.train_heuristics(
+                ((loss, loss_ent, loss_rel), ranks, scores, labels) = self.train_heuristics(
                     bid,
                     model,
                     name_loss,
@@ -1120,7 +1171,12 @@ class Trainer(Transformer):
 
             # Backpropagation if not in evaluation mode
             if not eval_mode:
-                loss.backward()
+                if loss_type == "both":
+                    loss.backward()
+                elif loss_type == "entity":
+                    loss_ent.backward()
+                else:
+                    loss_rel.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), clip_grad_norm)
                 optimizer.step()
 
@@ -1153,7 +1209,7 @@ class Trainer(Transformer):
         negative_rate: int,
         num_neg_rels: int,
         margin: float,
-    ) -> Tuple[torch.Tensor, Dict[str, float], torch.Tensor, NPINTS]:
+    ) -> Tuple[Tuple[torch.Tensor, torch.Tensor, torch.Tensor], Dict[str, float], torch.Tensor, NPINTS]:
         R"""
         Evaluate on heuristics-like input.
 
@@ -1213,7 +1269,7 @@ class Trainer(Transformer):
         assert name_loss in ("binary", "distance")
         if name_loss == "binary":
             #
-            (loss, _) = model.loss_function_binary(
+            (loss, (loss_ent, loss_rel)) = model.loss_function_binary(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
@@ -1224,7 +1280,7 @@ class Trainer(Transformer):
             )
         else:
             #
-            (loss, _) = model.loss_function_distance(
+            (loss, (loss_ent, loss_rel)) = model.loss_function_distance(
                 vrps,
                 adjs_target_torch,
                 rels_target_torch,
@@ -1243,12 +1299,16 @@ class Trainer(Transformer):
             heus_target_torch,
             lbls_target_torch,
             sample_negative_rate=negative_rate,
+            sample_num_neg_rels=num_neg_rels,
             ks=ks,
         )
         # Also record the loss value in the evaluation metrics, apart from directly returning the loss tensor
-        ranks[{"binary": "BCE", "distance": "Dist"}[name_loss]] = loss.item()
+        abbr_loss = {"binary": "BCE", "distance": "Dist"}[name_loss]
+        ranks[abbr_loss] = loss.item()
+        ranks["{:s}-Ent".format(abbr_loss)] = loss_ent.item()
+        ranks["{:s}-Rel".format(abbr_loss)] = loss_rel.item()
 
-        return (loss, ranks, scores, lbls_target_numpy)
+        return ((loss, loss_ent, loss_rel), ranks, scores, lbls_target_numpy)
 
 
 # \\:    def train_enclose(

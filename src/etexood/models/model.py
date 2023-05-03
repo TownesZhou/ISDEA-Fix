@@ -348,7 +348,7 @@ class Model(abc.ABC, torch.nn.Module):
 
         #
         loss = loss_ent + loss_rel
-        return loss, (loss_ent.item(), loss_rel.item())
+        return loss, (loss_ent, loss_rel)
 
     def loss_function_binary(
         self: SelfModel,
@@ -444,7 +444,7 @@ class Model(abc.ABC, torch.nn.Module):
 
         #
         loss = loss_ent + loss_rel
-        return loss, (loss_ent.item(), loss_rel.item())
+        return loss, (loss_ent, loss_rel)
 
     def metric_function_rank(
         self: SelfModel,
@@ -511,13 +511,22 @@ class Model(abc.ABC, torch.nn.Module):
         # \\:ranks = torch.argsort(rankables, dim=1, descending=True)
         # \\:(_, ranks) = torch.nonzero(ranks == 0).T
         # \\:ranks = (ranks + 1).to(lbls.dtype)
-        ranks = torch.sum(scores_pos <= scores_neg, dim=1)
-        ranks = (ranks + 1).to(lbls.dtype)
+        ranks_ent = torch.sum(scores_pos <= scores_neg, dim=1)
+        ranks_ent = (ranks_ent + 1).to(lbls.dtype)
+        #
+        ranks_rel = torch.sum(scores_pos <= scores_ngr, dim=1)
+        ranks_rel = (ranks_rel + 1).to(lbls.dtype)
 
         #
-        mr = torch.mean(ranks).item()
-        mrr = torch.mean(1.0 / ranks).item()
-        hit_at_ks = {k: torch.mean((ranks <= k).to(lbls.dtype)).item() for k in ks}
+        mr_ent = torch.mean(ranks_ent).item()
+        mrr_ent = torch.mean(1.0 / ranks_ent).item()
+        hit_at_ks_ent = {k: torch.mean((ranks_ent <= k).to(lbls.dtype)).item() for k in ks}
+        #
+        mr_rel = torch.mean(ranks_rel).item()
+        mrr_rel = torch.mean(1.0 / ranks_rel).item()
+        hit_at_ks_rel = {k: torch.mean((ranks_rel <= k).to(lbls.dtype)).item() for k in ks}
 
         #
-        return ({"MR": mr, "MRR": mrr, **{"Hit@{:d}".format(k): hit_at_ks[k] for k in ks}}, scores)
+        return ({"MR-Ent": mr_ent, "MRR-Ent": mrr_ent, **{"Hit@{:d}-Ent".format(k): hit_at_ks_ent[k] for k in ks},
+                 "MR-Rel": mr_rel, "MRR-Rel": mrr_rel, **{"Hit@{:d}-Rel".format(k): hit_at_ks_rel[k] for k in ks}},
+                scores)

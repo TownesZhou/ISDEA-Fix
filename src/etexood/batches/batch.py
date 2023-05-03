@@ -614,6 +614,7 @@ class MinibatchEdgeHeuristics(Minibatch):
 
         #
         eids_def = (adjs_def[0] * vmax + adjs_def[1]) * rmax + rels_def
+        eids_pos = (adjs_pos[0] * vmax + adjs_pos[1]) * rmax + rels_pos
 
         # For a negative sample of each positive sample, randomly corrupt its subject or object.
         if num > 0:
@@ -624,9 +625,10 @@ class MinibatchEdgeHeuristics(Minibatch):
             # Repeat negative sampling 10 times to ensure no observation is used as negative.
             for _ in range(10):
                 # Get corrupted node IDs conflicting with observed data or itself, and sample again.
+                eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
                 masks = onp.logical_or(
-                    onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
-                    onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+                    onp.isin(eids_neg, eids_def),
+                    onp.isin(eids_neg, eids_pos),
                 )
                 if not onp.any(masks).item():
                     #
@@ -638,9 +640,11 @@ class MinibatchEdgeHeuristics(Minibatch):
 
             # If it still has cases where observation is used as negative, report as an error.
             eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
-            assert onp.all(
-                onp.logical_not(onp.isin(eids_neg, eids_def)),
-            ).item(), "Observed edges are sampled as negative which is invalid."
+            masks = onp.logical_or(
+                onp.isin(eids_neg, eids_def),
+                onp.isin(eids_neg, eids_pos),
+            )
+            assert onp.all(onp.logical_not(masks)), "Observed edges are sampled as negative which is invalid."
 
         #
         return (adjs_neg, rels_neg)
