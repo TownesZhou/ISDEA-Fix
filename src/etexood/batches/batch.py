@@ -502,6 +502,7 @@ class MinibatchEdgeHeuristics(Minibatch):
         rels_def = self._subset._rels
 
         #
+        num_pos = len(rels_pos)
         adjs_pos = onp.repeat(adjs_pos, negative_rate, axis=1)
         rels_pos = onp.repeat(rels_pos, negative_rate)
         adjs_neg = adjs_pos.copy()
@@ -555,11 +556,43 @@ class MinibatchEdgeHeuristics(Minibatch):
                 adjs_neg[0, masks_sub] = corrupts[masks_sub]
                 adjs_neg[1, masks_obj] = corrupts[masks_obj]
 
+            # Check if we still have invalid negative samples.
+            masks_reshaped = onp.reshape(
+                onp.logical_or(
+                    onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
+                    onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+                ),
+                (num_pos, negative_rate),
+            )
+            adjs_neg_reshaped = onp.reshape(adjs_neg, (2, num_pos, negative_rate))
+
+            # Reuse negative samples to fill.
+            for i in range(num_pos):
+                #
+                if not onp.any(masks_reshaped[i]).item():
+                    #
+                    continue
+
+                # If negative is still not enough, repeat used negative samples.
+                (array_miss,) = onp.nonzero(masks_reshaped[i])
+                (array_fill,) = onp.nonzero(onp.logical_not(masks_reshaped[i]))
+                ids_miss = array_miss.tolist()
+                ids_fill = array_fill.tolist()
+                # print(adjs_neg_reshaped[:, i])
+                adjs_neg_reshaped[:, i, ids_miss] = adjs_neg_reshaped[
+                    :,
+                    i,
+                    ids_fill * (len(ids_miss) // len(ids_fill)) + ids_fill[: len(ids_miss) % len(ids_fill)],
+                ]
+                # print(adjs_neg_reshaped[:, i])
+            adjs_neg = onp.reshape(adjs_neg_reshaped, (2, num_pos * negative_rate))
+
             # If it still has cases where observation is used as negative, report as an error.
-            eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
-            assert onp.all(
-                onp.logical_not(onp.isin(eids_neg, eids_def)),
-            ).item(), "Observed edges are sampled as negative which is invalid."
+            masks = onp.logical_or(
+                onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
+                onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+            )
+            assert not onp.any(masks).item(), "Observed edges are sampled as negative which is invalid."
 
         #
         return (adjs_neg, rels_neg)
@@ -626,7 +659,7 @@ class MinibatchEdgeHeuristics(Minibatch):
                 # Get corrupted node IDs conflicting with observed data or itself, and sample again.
                 masks = onp.logical_or(
                     onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
-                    onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+                    rels_neg == rels_pos,
                 )
                 if not onp.any(masks).item():
                     #
