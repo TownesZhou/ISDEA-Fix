@@ -1,6 +1,7 @@
 #
 from typing import Mapping, Any, Union
 from .dssgnn import DSSGNNExcl
+from .gnn import GIN, GAT, SAGE
 
 
 #
@@ -53,6 +54,39 @@ def create_model(
             kernel=str(kwargs["kernel"]),
             train_eps=bool(kwargs["train_eps"]),
             dss_aggr=str(kwargs["dss_aggr"]),
+            ablate=str(kwargs["ablate"]),
+        )
+    elif name == 'gin':
+        return GIN(
+            num_entities,
+            num_relations,
+            num_layers,
+            num_hiddens,
+            activate=str(kwargs["activate"]),
+            dropout=float(kwargs["dropout"]),
+            train_eps=bool(kwargs["train_eps"]),
+            ablate=str(kwargs["ablate"]),
+        )
+    elif name == 'gat':
+        return GAT(
+            num_entities,
+            num_relations,
+            num_layers,
+            num_hiddens,
+            activate=str(kwargs["activate"]),
+            dropout=float(kwargs["dropout"]),
+            train_eps=bool(kwargs["train_eps"]),
+            ablate=str(kwargs["ablate"]),
+        )
+    elif name == 'sage':
+        return SAGE(
+            num_entities,
+            num_relations,
+            num_layers,
+            num_hiddens,
+            activate=str(kwargs["activate"]),
+            dropout=float(kwargs["dropout"]),
+            train_eps=bool(kwargs["train_eps"]),
             ablate=str(kwargs["ablate"]),
         )
     # \\:elif name in ("distmult", "transe", "complex", "rotate"):
@@ -136,7 +170,7 @@ def get_loss(
         Loss function name.
     """
     #
-    if name == "dssgnn":
+    if name in ["dssgnn", "gin", "gat", "sage", "gcn"]:
         #
         return "binary"
     # \\:elif name in ("distmult", "transe", "complex", "rotate"):
