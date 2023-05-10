@@ -9,7 +9,7 @@ export OPENBLAS_NUM_THREADS=1
 
 #
 task=FD2
-nr=0
+nr=2
 model=dssgnn
 aggr="mean"
 ablate="both"
