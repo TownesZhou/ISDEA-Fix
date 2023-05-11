@@ -15,8 +15,12 @@ from ..dtypes import NPINTS
 #
 SelfMinibatch = TypeVar("SelfMinibatch", bound="Minibatch")
 SelfMinibatchNode = TypeVar("SelfMinibatchNode", bound="MinibatchNode")
-SelfMinibatchEdgeHeuristics = TypeVar("SelfMinibatchEdgeHeuristics", bound="MinibatchEdgeHeuristics")
-SelfMinibatchEdgeEnclose = TypeVar("SelfMinibatchEdgeEnclose", bound="MinibatchEdgeEnclose")
+SelfMinibatchEdgeHeuristics = TypeVar(
+    "SelfMinibatchEdgeHeuristics", bound="MinibatchEdgeHeuristics"
+)
+SelfMinibatchEdgeEnclose = TypeVar(
+    "SelfMinibatchEdgeEnclose", bound="MinibatchEdgeEnclose"
+)
 
 
 class Minibatch(abc.ABC):
@@ -101,7 +105,9 @@ class MinibatchNode(Minibatch):
     Minibatch scheduler for nodes.
     """
 
-    def register(self: SelfMinibatchNode, subset: ComputationSubsetNode, /) -> SelfMinibatchNode:
+    def register(
+        self: SelfMinibatchNode, subset: ComputationSubsetNode, /
+    ) -> SelfMinibatchNode:
         R"""
         Register subset sampler.
 
@@ -213,7 +219,9 @@ class MinibatchNode(Minibatch):
         # Node schedule is fixed and reused by every epoch.
         return len(self._schedule)
 
-    def batch(self: SelfMinibatchNode, bid: int, /) -> Tuple[NPINTS, NPINTS, NPINTS, NPINTS, NPINTS]:
+    def batch(
+        self: SelfMinibatchNode, bid: int, /
+    ) -> Tuple[NPINTS, NPINTS, NPINTS, NPINTS, NPINTS]:
         R"""
         Get minibatch of given ID of current epoch.
 
@@ -256,18 +264,30 @@ class MinibatchNode(Minibatch):
         (uids, vids, adjs, rels) = self._subset.sample(
             "graph",
             nodes,
-            self._subset.masks_edge_accept(onp.zeros((2, 0), dtype=self._subset._adjs.dtype)),
+            self._subset.masks_edge_accept(
+                onp.zeros((2, 0), dtype=self._subset._adjs.dtype)
+            ),
         )
 
         #
         elapsed = time.time() - elapsed
 
         #
-        self._logger.debug("{:s} Get node minbatch of {:d} centers.".format(" " * len(title), len(nodes)))
         self._logger.debug(
-            "{:s} Get node minbatch of {:d} nodes, {:d} edges.".format(" " * len(title), len(vids), len(rels)),
+            "{:s} Get node minbatch of {:d} centers.".format(
+                " " * len(title), len(nodes)
+            )
         )
-        self._logger.debug("{:s} Get node minbatch in {:.3f} seconds.".format(" " * len(title), elapsed))
+        self._logger.debug(
+            "{:s} Get node minbatch of {:d} nodes, {:d} edges.".format(
+                " " * len(title), len(vids), len(rels)
+            ),
+        )
+        self._logger.debug(
+            "{:s} Get node minbatch in {:.3f} seconds.".format(
+                " " * len(title), elapsed
+            )
+        )
         return (uids[nodes], uids, vids, adjs, rels)
 
 
@@ -354,9 +374,9 @@ class MinibatchEdgeHeuristics(Minibatch):
         self._logger.info('Generate edge minibatch schedule to "{:s}".'.format(path))
 
         # Batch size should take negative sampling into consideration.
-        assert batch_size % (1 + negative_rate) == 0
-        batch_size_pos = batch_size // (1 + negative_rate)
-        batch_size_neg = batch_size_pos * negative_rate
+        assert batch_size % (1 + negative_rate + num_neg_rels) == 0
+        batch_size_pos = batch_size // (1 + negative_rate + num_neg_rels)
+        batch_size_neg = batch_size_pos * (negative_rate + num_neg_rels)
 
         #
         assert not reusable or num_epochs == 1
@@ -370,10 +390,14 @@ class MinibatchEdgeHeuristics(Minibatch):
             rels_ps = rels
             if negative_rate > 0:
                 #
-                (adjs_ng, rels_ng) = self.negative(adjs_ps, rels_ps, negative_rate=negative_rate, rng=rng)
+                (adjs_ng, rels_ng) = self.negative(
+                    adjs_ps, rels_ps, negative_rate=negative_rate, rng=rng
+                )
             if num_neg_rels > 0:
                 #
-                (adjs_nr, rels_nr) = self.negative_relations(adjs_ps, rels_ps, num=num_neg_rels, rng=rng)
+                (adjs_nr, rels_nr) = self.negative_relations(
+                    adjs_ps, rels_ps, num=num_neg_rels, rng=rng
+                )
 
             #
             buf = []
@@ -402,8 +426,12 @@ class MinibatchEdgeHeuristics(Minibatch):
                 # Generate negative samples correspond to positive samples.
                 if negative_rate > 0:
                     #
-                    indices_neg_base = onp.repeat(indices_pos, negative_rate) * negative_rate
-                    indices_neg_bias = onp.tile(onp.arange(negative_rate), (len(indices_pos),))
+                    indices_neg_base = (
+                        onp.repeat(indices_pos, negative_rate) * negative_rate
+                    )
+                    indices_neg_bias = onp.tile(
+                        onp.arange(negative_rate), (len(indices_pos),)
+                    )
                     indices_neg = indices_neg_base + indices_neg_bias
                     adjs_neg = adjs_ng[:, indices_neg]
                     rels_neg = rels_ng[indices_neg]
@@ -415,8 +443,12 @@ class MinibatchEdgeHeuristics(Minibatch):
                 # Generate negative relation samples correspond to positive samples.
                 if num_neg_rels > 0:
                     #
-                    indices_ngr_base = onp.repeat(indices_pos, num_neg_rels) * num_neg_rels
-                    indices_ngr_bias = onp.tile(onp.arange(num_neg_rels), (len(indices_pos),))
+                    indices_ngr_base = (
+                        onp.repeat(indices_pos, num_neg_rels) * num_neg_rels
+                    )
+                    indices_ngr_bias = onp.tile(
+                        onp.arange(num_neg_rels), (len(indices_pos),)
+                    )
                     indices_ngr = indices_ngr_base + indices_ngr_bias
                     adjs_ngr = adjs_nr[:, indices_ngr]
                     rels_ngr = rels_nr[indices_ngr]
@@ -454,12 +486,21 @@ class MinibatchEdgeHeuristics(Minibatch):
                     onp.save(file, array)
 
         # Heuristics must be generated for all related positive and negative edges.
-        self._logger.info("-- Generate positive and negative heuristics for full minibatch schedule.")
+        self._logger.info(
+            "-- Generate positive and negative heuristics for full minibatch schedule."
+        )
 
         # Collect unique adjacency list and their heuristics.
         eids = onp.unique(
             onp.concatenate(
-                list(xitertools.flatten([[array[0] * self._num_nodes + array[1] for array in buf] for buf in full])),
+                list(
+                    xitertools.flatten(
+                        [
+                            [array[0] * self._num_nodes + array[1] for array in buf]
+                            for buf in full
+                        ]
+                    )
+                ),
             ),
         )
         adjs = onp.stack((eids // self._num_nodes, eids % self._num_nodes))
@@ -502,6 +543,7 @@ class MinibatchEdgeHeuristics(Minibatch):
         rels_def = self._subset._rels
 
         #
+        num_pos = len(rels_pos)
         adjs_pos = onp.repeat(adjs_pos, negative_rate, axis=1)
         rels_pos = onp.repeat(rels_pos, negative_rate)
         adjs_neg = adjs_pos.copy()
@@ -535,12 +577,16 @@ class MinibatchEdgeHeuristics(Minibatch):
             adjs_neg[0, corrupt_sub] = corrupts[corrupt_sub]
             adjs_neg[1, corrupt_obj] = corrupts[corrupt_obj]
 
-            # Repeat negative sampling 1000 times to ensure no observation is used as negative.
-            for _ in range(1000):
+            # Repeat negative sampling 10 times to ensure no observation is used as negative.
+            for _ in range(10):
                 # Get corrupted node IDs conflicting with observed data or itself, and sample again.
                 masks = onp.logical_or(
-                    onp.isin((adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def),
-                    onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+                    onp.isin(
+                        (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                    ),
+                    onp.logical_and(
+                        adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]
+                    ),
                 )
                 if onp.any(masks).item():
                     #
@@ -555,10 +601,49 @@ class MinibatchEdgeHeuristics(Minibatch):
                 adjs_neg[0, masks_sub] = corrupts[masks_sub]
                 adjs_neg[1, masks_obj] = corrupts[masks_obj]
 
+            # Check if we still have invalid negative samples.
+            masks_reshaped = onp.reshape(
+                onp.logical_or(
+                    onp.isin(
+                        (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                    ),
+                    onp.logical_and(
+                        adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]
+                    ),
+                ),
+                (num_pos, negative_rate),
+            )
+            adjs_neg_reshaped = onp.reshape(adjs_neg, (2, num_pos, negative_rate))
+
+            # Reuse negative samples to fill.
+            for i in range(num_pos):
+                #
+                if not onp.any(masks_reshaped[i]).item():
+                    #
+                    continue
+
+                # If negative is still not enough, repeat used negative samples.
+                (array_miss,) = onp.nonzero(masks_reshaped[i])
+                (array_fill,) = onp.nonzero(onp.logical_not(masks_reshaped[i]))
+                ids_miss = array_miss.tolist()
+                ids_fill = array_fill.tolist()
+                adjs_neg_reshaped[:, i, ids_miss] = adjs_neg_reshaped[
+                    :,
+                    i,
+                    ids_fill * (len(ids_miss) // len(ids_fill))
+                    + ids_fill[: len(ids_miss) % len(ids_fill)],
+                ]
+            adjs_neg = onp.reshape(adjs_neg_reshaped, (2, num_pos * negative_rate))
+
             # If it still has cases where observation is used as negative, report as an error.
-            eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
-            assert onp.all(
-                onp.logical_not(onp.isin(eids_neg, eids_def)),
+            masks = onp.logical_or(
+                onp.isin(
+                    (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                ),
+                onp.logical_and(adjs_neg[0] == adjs_pos[0], adjs_neg[1] == adjs_pos[1]),
+            )
+            assert not onp.any(
+                masks
             ).item(), "Observed edges are sampled as negative which is invalid."
 
         #
@@ -600,6 +685,7 @@ class MinibatchEdgeHeuristics(Minibatch):
         rels_def = self._subset._rels
 
         #
+        num_pos = len(rels_pos)
         adjs_pos = onp.repeat(adjs_pos, num, axis=1)
         rels_pos = onp.repeat(rels_pos, num)
         adjs_neg = adjs_pos.copy()
@@ -614,9 +700,8 @@ class MinibatchEdgeHeuristics(Minibatch):
 
         #
         eids_def = (adjs_def[0] * vmax + adjs_def[1]) * rmax + rels_def
-        eids_pos = (adjs_pos[0] * vmax + adjs_pos[1]) * rmax + rels_pos
 
-        # For a negative sample of each positive sample, randomly corrupt its subject or object.
+        # For a negative sample of each positive sample, randomly corrupt its relation.
         if num > 0:
             # Generate corrupted node IDs for the first time.
             corrupts = rng.choice(self._num_relations, (len(rels_neg),), replace=True)
@@ -625,26 +710,63 @@ class MinibatchEdgeHeuristics(Minibatch):
             # Repeat negative sampling 10 times to ensure no observation is used as negative.
             for _ in range(10):
                 # Get corrupted node IDs conflicting with observed data or itself, and sample again.
-                eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
                 masks = onp.logical_or(
-                    onp.isin(eids_neg, eids_def),
-                    onp.isin(eids_neg, eids_pos),
+                    onp.isin(
+                        (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                    ),
+                    rels_neg == rels_pos,
                 )
                 if not onp.any(masks).item():
                     #
                     break
 
                 #
-                corrupts = rng.choice(self._num_relations, (len(rels_neg),), replace=True)
+                corrupts = rng.choice(
+                    self._num_relations, (len(rels_neg),), replace=True
+                )
                 rels_neg[masks] = corrupts[masks]
 
-            # If it still has cases where observation is used as negative, report as an error.
-            eids_neg = (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg
-            masks = onp.logical_or(
-                onp.isin(eids_neg, eids_def),
-                onp.isin(eids_neg, eids_pos),
+            # Check if we still have invalid negative samples.
+            masks_reshaped = onp.reshape(
+                onp.logical_or(
+                    onp.isin(
+                        (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                    ),
+                    rels_neg == rels_pos,
+                ),
+                (num_pos, num),
             )
-            assert onp.all(onp.logical_not(masks)), "Observed edges are sampled as negative which is invalid."
+            rels_neg_reshaped = onp.reshape(rels_neg, (num_pos, num))
+
+            # Reuse negative samples to fill.
+            for i in range(num_pos):
+                #
+                if not onp.any(masks_reshaped[i]).item():
+                    #
+                    continue
+
+                # If negative is still not enough, repeat used negative samples.
+                (array_miss,) = onp.nonzero(masks_reshaped[i])
+                (array_fill,) = onp.nonzero(onp.logical_not(masks_reshaped[i]))
+                ids_miss = array_miss.tolist()
+                ids_fill = array_fill.tolist()
+                rels_neg_reshaped[i, ids_miss] = rels_neg_reshaped[
+                    i,
+                    ids_fill * (len(ids_miss) // len(ids_fill))
+                    + ids_fill[: len(ids_miss) % len(ids_fill)],
+                ]
+            rels_neg = onp.reshape(rels_neg_reshaped, (num_pos * num,))
+
+            # If it still has cases where observation is used as negative, report as an error.
+            masks = onp.logical_or(
+                onp.isin(
+                    (adjs_neg[0] * vmax + adjs_neg[1]) * rmax + rels_neg, eids_def
+                ),
+                rels_neg == rels_pos,
+            )
+            assert not onp.any(
+                masks
+            ).item(), "Observed edges are sampled as negative which is invalid."
 
         #
         return (adjs_neg, rels_neg)
@@ -782,7 +904,11 @@ class MinibatchEdgeHeuristics(Minibatch):
                 len(rels_observe),
             ),
         )
-        self._logger.debug("{:s} Get edge minbatch in {:.3f} seconds.".format(" " * len(title), elapsed))
+        self._logger.debug(
+            "{:s} Get edge minbatch in {:.3f} seconds.".format(
+                " " * len(title), elapsed
+            )
+        )
         return (
             adjs_target,
             rels_target,
@@ -813,7 +939,9 @@ class MinibatchEdgeEnclose(Minibatch):
         #
         self.reusable: bool
 
-    def register(self: SelfMinibatchEdgeEnclose, enclose: Enclose, /) -> SelfMinibatchEdgeEnclose:
+    def register(
+        self: SelfMinibatchEdgeEnclose, enclose: Enclose, /
+    ) -> SelfMinibatchEdgeEnclose:
         R"""
         Register heuristics collector and subset sampler.
 
@@ -831,7 +959,9 @@ class MinibatchEdgeEnclose(Minibatch):
 
         # Directly translate on registration.
         self._logger.info(
-            'Translate all forests of heuristics collection (version 1) from "{:s}".'.format(self._enclose._cache),
+            'Translate all forests of heuristics collection (version 1) from "{:s}".'.format(
+                self._enclose._cache
+            ),
         )
         self._enclose.translate()
         return self
@@ -947,7 +1077,14 @@ class MinibatchEdgeEnclose(Minibatch):
         # Sampling enclosed subgraphs with training edges being removed for inductive learning.
         # Bias node IDs to merge multiple subgraphs into a single graph.
         # Update targeting adjacency list to match with merged version.
-        (vpts_observe, epts_observe, vids_observe, vfts_observe, adjs_observe, rels_observe) = self._enclose.load(
+        (
+            vpts_observe,
+            epts_observe,
+            vids_observe,
+            vfts_observe,
+            adjs_observe,
+            rels_observe,
+        ) = self._enclose.load(
             adjs_target,
         )
         bias = 0
@@ -985,7 +1122,11 @@ class MinibatchEdgeEnclose(Minibatch):
                 len(rels_observe),
             ),
         )
-        self._logger.debug("{:s} Get edge minbatch in {:.3f} seconds.".format(" " * len(title), elapsed))
+        self._logger.debug(
+            "{:s} Get edge minbatch in {:.3f} seconds.".format(
+                " " * len(title), elapsed
+            )
+        )
         return (
             adjs_target,
             rels_target,

@@ -21,10 +21,18 @@ def main() -> None:
     """
     #
     parser = argparse.ArgumentParser(description="Transform.")
-    parser.add_argument("--resume", type=str, required=True, help="Resuming log directory.")
-    parser.add_argument("--shuffle", action="store_true", help="Shuffle node and relation IDs in testing.")
+    parser.add_argument(
+        "--resume", type=str, required=True, help="Resuming log directory."
+    )
+    parser.add_argument(
+        "--shuffle",
+        action="store_true",
+        help="Shuffle node and relation IDs in testing.",
+    )
     parser.add_argument("--special", type=str, default="", help="Special test dataset.")
-    parser.add_argument("--resume-param", type=str, required=False, help="Resuming parameter directory.")
+    parser.add_argument(
+        "--resume-param", type=str, required=False, help="Resuming parameter directory."
+    )
     args = parser.parse_args()
     resume = args.resume
     shuffle = args.shuffle
@@ -47,12 +55,19 @@ def main() -> None:
         path_dataset = path_special
         path_cache = os.path.join(
             args.cache,
-            "~".join((os.path.basename(path_special), "dx{:d}".format(1 + int(args.bidirect)))),
+            "~".join(
+                (
+                    os.path.basename(path_special),
+                    "dx{:d}".format(1 + int(args.bidirect)),
+                )
+            ),
         )
     else:
         #
         path_dataset = os.path.join(args.data, task)
-        path_cache = os.path.join(args.cache, "~".join((task, "dx{:d}".format(1 + int(args.bidirect)))))
+        path_cache = os.path.join(
+            args.cache, "~".join((task, "dx{:d}".format(1 + int(args.bidirect))))
+        )
     os.makedirs(path_cache, exist_ok=True)
 
     # Allocate logging disk space.
@@ -79,7 +94,7 @@ def main() -> None:
         )
     suffix = "~".join(
         (
-            "ns{:d}-e{:d}-ss{:d}".format(args.num_neg_rels, args.num_epochs, args.seed_schedule),
+            "e{:d}-ss{:d}".format(args.num_epochs, args.seed_schedule),
             "l{:d}-sm{:d}".format(int(-math.log10(float(args.lr))), args.seed_model),
         )
     )
@@ -98,7 +113,9 @@ def main() -> None:
         json.dump({"resume": resume}, file, indent=4)
 
     # Prepare logging terminal.
-    logger = etexood.loggings.create_logger(unique, os.path.basename(unique), level_file=None, level_console=None)
+    logger = etexood.loggings.create_logger(
+        unique, os.path.basename(unique), level_file=None, level_console=None
+    )
 
     # Load dataset.
     print(path_dataset)
@@ -117,7 +134,9 @@ def main() -> None:
     if args.bidirect:
         #
         logger.info("-- Augment observation by inversion.")
-        adjs_observe = onp.concatenate((adjs_observe[[0, 1]], adjs_observe[[1, 0]]), axis=1)
+        adjs_observe = onp.concatenate(
+            (adjs_observe[[0, 1]], adjs_observe[[1, 0]]), axis=1
+        )
         rels_observe = onp.concatenate((rels_observe, rels_observe + num_relations))
 
     # Prepare test edges.
@@ -127,7 +146,10 @@ def main() -> None:
 
     # Check size.
     assert len(dataset.triplets_observe) * (1 + int(args.bidirect)) == len(rels_observe)
-    assert adjs_observe.ndim == 2 and tuple(adjs_observe.shape) == (2, len(rels_observe))
+    assert adjs_observe.ndim == 2 and tuple(adjs_observe.shape) == (
+        2,
+        len(rels_observe),
+    )
     assert len(rels_observe) > 0
     assert len(dataset.triplets_test) == len(rels_test)
     assert adjs_test.ndim == 2 and tuple(adjs_test.shape) == (2, len(rels_test))
@@ -138,13 +160,15 @@ def main() -> None:
 
     # Check content.
     assert onp.all(
-        dataset.triplets_observe[:, :2] == adjs_observe.T[: len(rels_observe) // (1 + int(args.bidirect))]
+        dataset.triplets_observe[:, :2]
+        == adjs_observe.T[: len(rels_observe) // (1 + int(args.bidirect))]
     ).item()
     assert onp.all(dataset.triplets_test[:, :2] == adjs_test.T)
 
     #
     assert onp.all(
-        dataset.triplets_observe[:, 2] == rels_observe[: len(rels_observe) // (1 + int(args.bidirect))]
+        dataset.triplets_observe[:, 2]
+        == rels_observe[: len(rels_observe) // (1 + int(args.bidirect))]
     ).item()
     assert onp.all(dataset.triplets_test[:, 2] == rels_test)
 
@@ -158,7 +182,9 @@ def main() -> None:
     #
     if shuffle:
         #
-        perm_relation = onp.array(list(reversed(range(num_relations * (1 + args.bidirect)))))
+        perm_relation = onp.array(
+            list(reversed(range(num_relations * (1 + args.bidirect))))
+        )
     else:
         #
         perm_relation = onp.array(list(range(num_relations * (1 + args.bidirect))))
@@ -195,11 +221,12 @@ def main() -> None:
     # Adjust test negative ratio by half since test cases are augmented by twice.
     # For NBFNet negative sampling.
     test_negative_rate_eval = args.negative_rate_eval // 2
-    test_num_neg_rels_eval = args.num_neg_rels // 2
+    test_num_neg_rels_eval = args.num_neg_rels_eval // 2
     tester.load(
         1,
         batch_size_node=args.batch_size_node,
-        batch_size_edge=args.batch_size_edge_test * (1 + test_negative_rate_eval),
+        batch_size_edge=args.batch_size_edge_test
+        * (1 + test_negative_rate_eval + test_num_neg_rels_eval),
         negative_rate=test_negative_rate_eval,
         num_neg_rels=test_num_neg_rels_eval,
         seed=args.seed_schedule + 3,
@@ -235,16 +262,23 @@ def main() -> None:
     )
     if resume_param is None:
         #
-        state_dict = torch.load(os.path.join(resume, "parameters"), map_location=torch.device(args.device))
+        state_dict = torch.load(
+            os.path.join(resume, "parameters"), map_location=torch.device(args.device)
+        )
     else:
         #
-        state_dict = torch.load(os.path.join(resume_param, "parameters"), map_location=torch.device(args.device))
+        state_dict = torch.load(
+            os.path.join(resume_param, "parameters"),
+            map_location=torch.device(args.device),
+        )
     # \\:if len(model.embedding_entity) != len(state_dict["embedding_entity"]):
     # \\:    #
     # \\:    assert torch.all(model.embedding_entity.data == 1.0).item()
     # \\:    assert torch.all(state_dict["embedding_entity"] == 1.0).item()
     # \\:    state_dict["embedding_entity"] = model.embedding_entity.data
-    state_dict["embedding_entity"] = state_dict["embedding_entity"].new_ones((num_nodes, 1))
+    state_dict["embedding_entity"] = state_dict["embedding_entity"].new_ones(
+        (num_nodes, 1)
+    )
     model.load_state_dict(state_dict)
     name_loss = etexood.models.get_loss(0, 0, 0, 0, args.model, {})
 
