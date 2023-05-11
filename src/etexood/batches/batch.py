@@ -374,9 +374,9 @@ class MinibatchEdgeHeuristics(Minibatch):
         self._logger.info('Generate edge minibatch schedule to "{:s}".'.format(path))
 
         # Batch size should take negative sampling into consideration.
-        assert batch_size % (1 + negative_rate) == 0
-        batch_size_pos = batch_size // (1 + negative_rate)
-        batch_size_neg = batch_size_pos * negative_rate
+        assert batch_size % (1 + negative_rate + num_neg_rels) == 0
+        batch_size_pos = batch_size // (1 + negative_rate + num_neg_rels)
+        batch_size_neg = batch_size_pos * (negative_rate + num_neg_rels)
 
         #
         assert not reusable or num_epochs == 1

@@ -26,13 +26,30 @@ def main() -> None:
     parser.add_argument("--cache", type=str, required=True, help="Cache root directory")
     parser.add_argument("--task", type=str, required=True, help="Task prefix.")
     parser.add_argument("--sample", type=str, required=True, help="Sampling data type.")
-    parser.add_argument("--bidirect", action="store_true", help="Treat observation graph as bidirected.")
-    parser.add_argument("--overfit", action="store_true", help="Overfit on both training and validation.")
+    parser.add_argument(
+        "--bidirect", action="store_true", help="Treat observation graph as bidirected."
+    )
+    parser.add_argument(
+        "--overfit",
+        action="store_true",
+        help="Overfit on both training and validation.",
+    )
     parser.add_argument("--num-hops", type=int, required=True, help="Number of hops.")
-    parser.add_argument("--num-processes", type=int, required=True, help="Number of processes.")
-    parser.add_argument("--unit-process", type=float, required=True, help="Report unit of process.")
-    parser.add_argument("--num-epochs", type=int, required=True, help="Number of epochs.")
-    parser.add_argument("--batch-size-node", type=int, required=True, help="Batch size of node sampling.")
+    parser.add_argument(
+        "--num-processes", type=int, required=True, help="Number of processes."
+    )
+    parser.add_argument(
+        "--unit-process", type=float, required=True, help="Report unit of process."
+    )
+    parser.add_argument(
+        "--num-epochs", type=int, required=True, help="Number of epochs."
+    )
+    parser.add_argument(
+        "--batch-size-node",
+        type=int,
+        required=True,
+        help="Batch size of node sampling.",
+    )
     parser.add_argument(
         "--batch-size-edge-train",
         type=int,
@@ -45,37 +62,80 @@ def main() -> None:
         required=True,
         help="Batch size of validation edge sampling.",
     )
-    parser.add_argument("--batch-size-edge-test", type=int, required=True, help="Batch size of test edge sampling.")
-    parser.add_argument("--negative-rate-train", type=int, required=True, help="Negative sampling rate of training.")
-    parser.add_argument("--negative-rate-eval", type=int, required=True, help="Negative sampling rate of evaluation.")
     parser.add_argument(
-        "--num-neg-rels",
+        "--batch-size-edge-test",
         type=int,
         required=True,
-        help="Number of negative relation samples of both training and evaluation.",
+        help="Batch size of test edge sampling.",
     )
-    parser.add_argument("--seed-schedule", type=int, required=True, help="Schedule seed.")
+    parser.add_argument(
+        "--negative-rate-train",
+        type=int,
+        required=True,
+        help="Negative sampling rate of training.",
+    )
+    parser.add_argument(
+        "--negative-rate-eval",
+        type=int,
+        required=True,
+        help="Negative sampling rate of evaluation.",
+    )
+    parser.add_argument(
+        "--num-neg-rels-train",
+        type=int,
+        required=True,
+        help="Number of negative relation samples of both training.",
+    )
+    parser.add_argument(
+        "--num-neg-rels-eval",
+        type=int,
+        required=True,
+        help="Number of negative relation samples of both evaluation.",
+    )
+    parser.add_argument(
+        "--seed-schedule", type=int, required=True, help="Schedule seed."
+    )
     parser.add_argument("--device", type=str, required=True, help="Device.")
     parser.add_argument("--model", type=str, required=True, help="Model.")
     parser.add_argument("--hidden", type=int, required=True, help="Hidden layer size.")
-    parser.add_argument("--activate", type=str, required=True, help="Activation function.")
+    parser.add_argument(
+        "--activate", type=str, required=True, help="Activation function."
+    )
     parser.add_argument("--dropout", type=float, required=True, help="Dropout.")
-    parser.add_argument("--num-bases", type=int, required=True, help="Number of RGCN bases.")
+    parser.add_argument(
+        "--num-bases", type=int, required=True, help="Number of RGCN bases."
+    )
     parser.add_argument("--dss-aggr", type=str, required=True, help="DSS aggregation")
-    parser.add_argument("--ablate", type=str, required=False, default="", help="DSS triplet feature ablation study")
-    parser.add_argument("--clip-grad-norm", type=float, required=True, help="Gradient clipping norm.")
+    parser.add_argument(
+        "--ablate",
+        type=str,
+        required=False,
+        default="",
+        help="DSS triplet feature ablation study",
+    )
+    parser.add_argument(
+        "--clip-grad-norm", type=float, required=True, help="Gradient clipping norm."
+    )
     parser.add_argument("--lr", type=float, required=True, help="Learning rate.")
-    parser.add_argument("--weight-decay", type=float, required=True, help="Weight decay.")
+    parser.add_argument(
+        "--weight-decay", type=float, required=True, help="Weight decay."
+    )
     parser.add_argument("--seed-model", type=int, required=True, help="Model seed.")
-    parser.add_argument("--ks", type=str, required=True, help="Evaluating hit at ks separated by comma.")
+    parser.add_argument(
+        "--ks", type=str, required=True, help="Evaluating hit at ks separated by comma."
+    )
     parser.add_argument("--margin", type=float, required=True, help="Distance margin.")
-    parser.add_argument("--early-stop", type=int, required=True, help="Early stop patience.")
+    parser.add_argument(
+        "--early-stop", type=int, required=True, help="Early stop patience."
+    )
     args = parser.parse_args()
 
     # Allocate caching disk space.
     task = "-".join((args.task, "trans"))
     path_dataset = os.path.join(args.data, task)
-    path_cache = os.path.join(args.cache, "~".join((task, "dx{:d}".format(1 + int(args.bidirect)))))
+    path_cache = os.path.join(
+        args.cache, "~".join((task, "dx{:d}".format(1 + int(args.bidirect))))
+    )
     os.makedirs(path_cache, exist_ok=True)
 
     #
@@ -83,11 +143,15 @@ def main() -> None:
 
     # Allocate logging disk space.
     prefix = "~".join(
-        [args.task, "dx{:d}".format(1 + int(args.bidirect)), "-".join([args.model, args.dss_aggr, args.ablate])],
+        [
+            args.task,
+            "dx{:d}".format(1 + int(args.bidirect)),
+            "-".join([args.model, args.dss_aggr, args.ablate]),
+        ],
     )
     suffix = "~".join(
         (
-            "nr{:d}-e{:d}-ss{:d}".format(args.num_neg_rels, args.num_epochs, args.seed_schedule),
+            "e{:d}-ss{:d}".format(args.num_epochs, args.seed_schedule),
             "l{:d}-sm{:d}".format(int(-math.log10(float(args.lr))), args.seed_model),
         )
     )
@@ -106,7 +170,9 @@ def main() -> None:
         json.dump(vars(args), file, indent=4)
 
     # Prepare logging terminal.
-    logger = etexood.loggings.create_logger(unique, os.path.basename(unique), level_file=None, level_console=None)
+    logger = etexood.loggings.create_logger(
+        unique, os.path.basename(unique), level_file=None, level_console=None
+    )
 
     # Load dataset.
     dataset = etexood.datasets.DatasetTriplet.from_file(logger, path_dataset)
@@ -122,7 +188,9 @@ def main() -> None:
     if args.bidirect:
         #
         logger.info("-- Augment observation by inversion.")
-        adjs_observe = onp.concatenate((adjs_observe[[0, 1]], adjs_observe[[1, 0]]), axis=1)
+        adjs_observe = onp.concatenate(
+            (adjs_observe[[0, 1]], adjs_observe[[1, 0]]), axis=1
+        )
         rels_observe = onp.concatenate((rels_observe, rels_observe + num_relations))
 
     # Prepare training edges.
@@ -148,7 +216,10 @@ def main() -> None:
 
     # Check size.
     assert len(dataset.triplets_observe) * (1 + int(args.bidirect)) == len(rels_observe)
-    assert adjs_observe.ndim == 2 and tuple(adjs_observe.shape) == (2, len(rels_observe))
+    assert adjs_observe.ndim == 2 and tuple(adjs_observe.shape) == (
+        2,
+        len(rels_observe),
+    )
     assert len(rels_observe) > 0
     assert len(dataset.triplets_train[starter_trans:]) == len(rels_train)
     assert adjs_train.ndim == 2 and tuple(adjs_train.shape) == (2, len(rels_train))
@@ -162,14 +233,16 @@ def main() -> None:
 
     # Check content.
     assert onp.all(
-        dataset.triplets_observe[:, :2] == adjs_observe.T[: len(rels_observe) // (1 + int(args.bidirect))]
+        dataset.triplets_observe[:, :2]
+        == adjs_observe.T[: len(rels_observe) // (1 + int(args.bidirect))]
     ).item()
     assert onp.all(dataset.triplets_train[starter_trans:][:, :2] == adjs_train.T)
     assert onp.all(dataset.triplets_valid[:, :2] == adjs_valid.T)
 
     #
     assert onp.all(
-        dataset.triplets_observe[:, 2] == rels_observe[: len(rels_observe) // (1 + int(args.bidirect))]
+        dataset.triplets_observe[:, 2]
+        == rels_observe[: len(rels_observe) // (1 + int(args.bidirect))]
     ).item()
     assert onp.all(dataset.triplets_train[starter_trans:][:, 2] == rels_train)
     assert onp.all(dataset.triplets_valid[:, 2] == rels_valid)
@@ -244,18 +317,20 @@ def main() -> None:
     trainer.load(
         args.num_epochs,
         batch_size_node=args.batch_size_node,
-        batch_size_edge=args.batch_size_edge_train * (1 + args.negative_rate_train),
+        batch_size_edge=args.batch_size_edge_train
+        * (1 + args.negative_rate_train + args.num_neg_rels_train),
         negative_rate=args.negative_rate_train,
-        num_neg_rels=args.num_neg_rels,
+        num_neg_rels=args.num_neg_rels_train,
         seed=args.seed_schedule + 1,
         reusable_edge=False,
     )
     validator.load(
         1,
         batch_size_node=args.batch_size_node,
-        batch_size_edge=args.batch_size_edge_valid * (1 + args.negative_rate_eval),
+        batch_size_edge=args.batch_size_edge_valid
+        * (1 + args.negative_rate_eval + args.num_neg_rels_eval),
         negative_rate=args.negative_rate_eval,
-        num_neg_rels=args.num_neg_rels,
+        num_neg_rels=args.num_neg_rels_eval,
         seed=args.seed_schedule + 2,
         reusable_edge=True,
     )
@@ -283,7 +358,9 @@ def main() -> None:
         .to(torch.device(args.device))
     )
     loss = etexood.models.get_loss(0, 0, 0, 0, args.model, {})
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = torch.optim.Adam(
+        model.parameters(), lr=args.lr, weight_decay=args.weight_decay
+    )
 
     #
     ks = list(sorted([int(msg) for msg in re.split(r"\s*,\s*", args.ks)]))
@@ -295,7 +372,7 @@ def main() -> None:
         loss,
         ks=ks,
         negative_rate=args.negative_rate_eval,
-        num_neg_rels=args.num_neg_rels,
+        num_neg_rels=args.num_neg_rels_eval,
         margin=args.margin,
         eind=0,
         emax=args.num_epochs,
@@ -316,7 +393,10 @@ def main() -> None:
     pd.DataFrame.from_records(
         buf
         + [
-            {key: {float: float("nan"), bool: False}[type(val)] for (key, val) in buf[-1].items()}
+            {
+                key: {float: float("nan"), bool: False}[type(val)]
+                for (key, val) in buf[-1].items()
+            }
             for _ in range(args.num_epochs)
         ],
     ).to_csv(os.path.join(unique, "metrics.csv"))
@@ -329,7 +409,7 @@ def main() -> None:
             loss,
             optimizer,
             negative_rate=args.negative_rate_train,
-            num_neg_rels=args.num_neg_rels,
+            num_neg_rels=args.num_neg_rels_train,
             margin=args.margin,
             clip_grad_norm=args.clip_grad_norm,
             eind=eind,
@@ -342,7 +422,7 @@ def main() -> None:
             loss,
             ks=ks,
             negative_rate=args.negative_rate_eval,
-            num_neg_rels=args.num_neg_rels,
+            num_neg_rels=args.num_neg_rels_eval,
             margin=args.margin,
             eind=eind,
             emax=args.num_epochs,
@@ -369,7 +449,10 @@ def main() -> None:
         pd.DataFrame.from_records(
             buf
             + [
-                {key: {float: float("nan"), bool: False}[type(val)] for (key, val) in buf[-1].items()}
+                {
+                    key: {float: float("nan"), bool: False}[type(val)]
+                    for (key, val) in buf[-1].items()
+                }
                 for _ in range(args.num_epochs - eind)
             ],
         ).to_csv(os.path.join(unique, "metrics.csv"))
@@ -384,7 +467,16 @@ def main() -> None:
         #
         print(
             "GPU: {:d} MB".format(
-                int(math.ceil(float(torch.cuda.max_memory_allocated(device=torch.device(args.device))) / 1024.0**2)),
+                int(
+                    math.ceil(
+                        float(
+                            torch.cuda.max_memory_allocated(
+                                device=torch.device(args.device)
+                            )
+                        )
+                        / 1024.0**2
+                    )
+                ),
             ),
         )
 

@@ -6,7 +6,9 @@ import numpy as onp
 from typing import Dict, Sequence
 
 
-def load_and_build(prefix: str, /, *, suffices_load: Sequence[str], suffices_save: Sequence[str]) -> None:
+def load_and_build(
+    prefix: str, /, *, suffices_load: Sequence[str], suffices_save: Sequence[str]
+) -> None:
     R"""
     Load triplets from file and build mapping from entities and relations to IDs.
 
@@ -82,11 +84,15 @@ def load_and_build(prefix: str, /, *, suffices_load: Sequence[str], suffices_sav
             #
             maxlen_id = max(len(str(val)) for val in name2id.values())
             maxlen_name = max(len(key) for key in name2id.keys())
-            with open(os.path.join("-".join((prefix, suffix)), "{:s}.dict".format(title)), "w") as file:
+            with open(
+                os.path.join("-".join((prefix, suffix)), "{:s}.dict".format(title)), "w"
+            ) as file:
                 #
                 for key, val in name2id.items():
                     #
-                    file.write("{:<{:d}d} {:>{:d}s}\n".format(val, maxlen_id, key, maxlen_name))
+                    file.write(
+                        "{:<{:d}d} {:>{:d}s}\n".format(val, maxlen_id, key, maxlen_name)
+                    )
 
     #
     perm_entity = onp.random.RandomState(42).permutation(len(entity2id)).tolist()
@@ -99,15 +105,22 @@ def load_and_build(prefix: str, /, *, suffices_load: Sequence[str], suffices_sav
         #
         suffix = "ind-perm"
         os.makedirs("-".join((prefix, suffix)), exist_ok=True)
-        for name2id, title in ((entity2id_perm, "entities"), (relation2id_perm, "relations")):
+        for name2id, title in (
+            (entity2id_perm, "entities"),
+            (relation2id_perm, "relations"),
+        ):
             #
             maxlen_id = max(len(str(val)) for val in name2id.values())
             maxlen_name = max(len(key) for key in name2id.keys())
-            with open(os.path.join("-".join((prefix, suffix)), "{:s}.dict".format(title)), "w") as file:
+            with open(
+                os.path.join("-".join((prefix, suffix)), "{:s}.dict".format(title)), "w"
+            ) as file:
                 #
                 for key, val in name2id.items():
                     #
-                    file.write("{:<{:d}d} {:>{:d}s}\n".format(val, maxlen_id, key, maxlen_name))
+                    file.write(
+                        "{:<{:d}d} {:>{:d}s}\n".format(val, maxlen_id, key, maxlen_name)
+                    )
 
 
 def load_and_apply(data: str, /) -> None:
@@ -180,7 +193,9 @@ def main() -> None:
     #
     prefix = os.path.join("data", args.data)
     load_and_build(prefix, suffices_load=["trans"], suffices_save=["trans"])
-    load_and_build(prefix, suffices_load=["trans", "ind"], suffices_save=["ind", "ind-perm"])
+    load_and_build(
+        prefix, suffices_load=["trans", "ind"], suffices_save=["ind", "ind-perm"]
+    )
     for suffix in ["trans", "ind"]:
         #
         load_and_apply("-".join((prefix, suffix)))
