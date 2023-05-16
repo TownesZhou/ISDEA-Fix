@@ -137,7 +137,7 @@ class HeuristicsForest0(object):
         self._pseudo = pesudo
 
         #
-        assert self._num_hops > 1, "Number of hops should be greater than 1 for heuristics to be useful."
+        # assert self._num_hops > 1, "Number of hops should be greater than 1 for heuristics to be useful."
 
     def forest(self: SelfHeuristicsForest0, nodes: NPINTS, /) -> None:
         R"""
