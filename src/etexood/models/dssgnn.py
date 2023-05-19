@@ -349,6 +349,7 @@ class DSSGNNExcl(Model):
         self: SelfDSSGNNExcl,
         num_entities: int,
         num_relations: int,
+        num_hops: int,
         num_layers: int,
         num_hiddens: int,
         /,
@@ -369,6 +370,8 @@ class DSSGNNExcl(Model):
             Number of entities.
         - num_relations
             Number of relations.
+        - num_hops
+            Number of distance hops to create heuristics embeddings for.
         - num_layers
             Number of layers.
         - num_hiddens
@@ -395,6 +398,7 @@ class DSSGNNExcl(Model):
         #
         self.num_entities = num_entities
         self.num_relations = num_relations
+        self.num_hops = num_hops
         self.num_layers = num_layers
         self.num_hiddens = num_hiddens
         self.dss_aggr = dss_aggr
@@ -414,7 +418,8 @@ class DSSGNNExcl(Model):
 
         # DSSGNN should be joint representation which is simplified into a structrual representation along with some
         # heuristic representation.
-        self.embedding_shortest = torch.nn.Parameter(torch.zeros(self.num_layers + 2, self.num_hiddens))
+        # self.embedding_shortest = torch.nn.Parameter(torch.zeros(self.num_layers + 2, self.num_hiddens))
+        self.embedding_shortest = torch.nn.Parameter(torch.zeros(self.num_hops + 2, self.num_hiddens))
 
         #
         self.convs = torch.nn.ModuleList()

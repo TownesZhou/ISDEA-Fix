@@ -12,6 +12,7 @@ Model = ModelHeuristics
 def create_model(
     num_entities: int,
     num_relations: int,
+    num_hops: int,
     num_layers: int,
     num_hiddens: int,
     name: str,
@@ -27,6 +28,8 @@ def create_model(
         Number of entities.
     - num_relations
         Number of relations.
+    - num_hops
+        Number of distance hops to create heuristics embeddings for.
     - num_layers
         Number of layers.
     - num_hiddens
@@ -47,6 +50,7 @@ def create_model(
         return DSSGNNExcl(
             num_entities,
             num_relations,
+            num_hops,
             num_layers,
             num_hiddens,
             activate=str(kwargs["activate"]),
