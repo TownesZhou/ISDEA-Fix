@@ -153,12 +153,24 @@ def test(cfg, model, test_data, filtered_data=None):
             t_mask, h_mask = tasks.strict_negative_mask(test_data, batch)
         else:
             t_mask, h_mask = tasks.strict_negative_mask(filtered_data, batch)
+        # For performance calculation over doubly inductive link prediction tasks
+        n_keep = 25 # Modify
+        for i in range(t_mask.shape[0]): # Modify
+            row_indices = (t_mask[i] == True).nonzero(as_tuple=True)[0] # Modify
+            shuffled = row_indices[torch.randperm(row_indices.shape[0])] # Modify
+            t_mask[i, shuffled[:(len(row_indices) - n_keep)]] = False # Modify
+        for i in range(h_mask.shape[0]): # Modify
+            row_indices = (h_mask[i] == True).nonzero(as_tuple=True)[0] # Modify
+            shuffled = row_indices[torch.randperm(row_indices.shape[0])] # Modify
+            h_mask[i, shuffled[:(len(row_indices) - n_keep)]] = False # Modify
+            
         pos_h_index, pos_t_index, pos_r_index = batch.t()
         t_ranking = tasks.compute_ranking(t_pred, pos_t_index, t_mask)
+        t_ranking += torch.randint(n_keep + 1, (len(t_ranking),)).to(t_ranking.device) # Modify
         h_ranking = tasks.compute_ranking(h_pred, pos_h_index, h_mask)
-        num_t_negative = t_mask.sum(dim=-1)
-        num_h_negative = h_mask.sum(dim=-1)
-
+        h_ranking += torch.randint(n_keep + 1, (len(t_ranking),)).to(t_ranking.device) # Modify
+        num_t_negative = t_mask.sum(dim=-1) + n_keep # Modify
+        num_h_negative = h_mask.sum(dim=-1) + n_keep # Modify
         rankings += [t_ranking, h_ranking]
         num_negatives += [num_t_negative, num_h_negative]
 

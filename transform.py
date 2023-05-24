@@ -220,8 +220,8 @@ def main() -> None:
 
     # Adjust test negative ratio by half since test cases are augmented by twice.
     # For NBFNet negative sampling.
-    test_negative_rate_eval = args.negative_rate_eval // 2
-    test_num_neg_rels_eval = args.num_neg_rels_eval // 2
+    test_negative_rate_eval = args.negative_rate_eval
+    test_num_neg_rels_eval = args.num_neg_rels_eval
     tester.load(
         1,
         batch_size_node=args.batch_size_node,

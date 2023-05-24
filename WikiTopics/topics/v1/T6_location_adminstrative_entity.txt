@@ -1,0 +1,11 @@
+P36 capital / capital city
+P3018 located in protected area / protected area
+P131 located in the administrative territorial entity / located in the administrative unit
+P17 country / sovereign state
+P27 country of citizenship / citizen of
+P30 continent
+P421 located in time zone / timezone
+P159 headquarters location / head office location
+P915 filming location / location of filming
+P6 head of government / mayor
+P1376 capital of / county seat of

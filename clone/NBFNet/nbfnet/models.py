@@ -5,7 +5,23 @@ import torch
 from torch import nn, autograd
 
 from torch_scatter import scatter_add
+from torch.nn import functional as F
 from . import tasks, layers
+
+class REmbedding(nn.Module):  # Modify
+    def __init__(self, num_relation, input_dim):  # Modify
+        super(REmbedding, self).__init__()  # Modify
+        self.num_embeddings = num_relation  # Modify
+        self.embedding_dim = input_dim  # Modify
+        self.weight = nn.Parameter(torch.empty((1, input_dim)), requires_grad=True)  # Modify
+        self.reset_parameters()  # Modify
+        
+    def reset_parameters(self):  # Modify
+        torch.nn.init.normal_(self.weight)  # Modify
+    
+    def forward(self, x):  # Modify
+        return F.embedding(  # Modify
+            x, self.weight.expand(self.num_embeddings, self.embedding_dim))  # Modify
 
 
 class NBFNet(nn.Module):
@@ -61,7 +77,8 @@ class NBFNet(nn.Module):
 
         # additional relation embedding which serves as an initial 'query' for the NBFNet forward pass
         # each layer has its own learnable relations matrix, so we send the total number of relations, too
-        self.query = nn.Embedding(num_relation, input_dim)
+        # self.query = nn.Embedding(num_relation, input_dim)
+        self.query = REmbedding(num_relation, input_dim) # Modify
         self.mlp = nn.Sequential()
         mlp = []
         for i in range(num_mlp_layer - 1):

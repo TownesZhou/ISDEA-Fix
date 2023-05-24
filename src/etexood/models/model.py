@@ -622,7 +622,13 @@ class Model(abc.ABC, torch.nn.Module):
 
         # Entity and relation negative samples are treated as same kind of negative samples.
         scores_neg = torch.concat(buf_scores_neg, dim=1)
-        ranks = torch.sum(scores_pos <= scores_neg, dim=1)
+        # ranks = torch.sum(scores_pos <= scores_neg, dim=1)
+        # Uniformly rank over scores that has the same values
+        ranks = torch.sum(scores_pos < scores_neg, dim=1)
+        num_same = torch.sum(scores_pos == scores_neg, dim=1)
+        rand_prop = torch.rand(len(ranks)).to(num_same.device)
+        rand_val = torch.round(num_same * rand_prop).int()
+        ranks += rand_val
         ranks = (ranks + 1).to(lbls.dtype)
 
         #

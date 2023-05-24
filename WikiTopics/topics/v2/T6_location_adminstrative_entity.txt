@@ -1,0 +1,65 @@
+P200	lake inflows	inflow	inflows	lake inflow	river inflows
+P3018	located in protected area	protected area	national park	state park
+P189	location of discovery	findspot	location of discovered object	discovery place	place of discovery	discovered at:	find location	find spot
+P610	highest point	highest peak	zenith	summit	extreme point highest	pinnacle
+P36	capital	capital city	capital town	chef-lieu	principal place	county seat	administrative centre	administrative headquarters	has capital
+P421	located in time zone	timezone	time zone	time
+P276	location	moveable object location	located in	event location	venue	is in	location of item	place held	based in	neighborhood	region	in
+P609	terminus location	destination	departure point	from	to	between
+P159	headquarters location	head office location	HQ	garrison	admin HQ	seat	principle office	headquarters	head quarters	HQ location	based in
+P47	shares border with	borders	bordered by	adjacent to	next to	border
+P1001	applies to jurisdiction	of jurisdiction	linked to jurisdiction	belongs to jurisdiction	jurisdiction	country of jurisdiction	valid in jurisdiction	applies to territorial jurisdiction	applied to jurisdiction
+P560	direction	facing
+P1398	structure replaces	replacement building	replaces (structure)	replaced by (structure)
+P3137	parent peak	parent mountain
+P194	legislative body	representative body	parliament	council	assembly	diet	rural council	district council	municipal council	aboriginal council	indigenous council	city council	local government area	LGA	District	Tehsil	Zila	Jila
+P2872	tourist office	visitor center	contact station
+P2937	parliamentary term	legislative term
+P1435	heritage designation	designation	listing	listed status	protected status	protection	legal protection	heritage designation	heritage status
+P1071	location of final assembly	assembly location	place built	place made	location of origin	place of origin	made in	minted at	mint	manufactured in	manufacturing location	location created	creation location	place of production	production place
+P2743	this zoological name is coordinate with	coordinate name
+P974	tributary
+P625	coordinate location	location	coordinates
+P131	located in the administrative territorial entity	in	location	located within
+P17	country	country of origin	sovereign state	nation
+P30	continent
+P3005	valid in place	applies to location	valid in location	applies to place	country	true in	valid in territory
+P206	located in or next to body of water	adjacent to body of water
+P276	location	located in	located on	venue
+P1082	population
+P281	postal code	zip code
+P937	work location	workplace	work location	place of activity	active in	location of work	place of work	working at
+P241	military branch	branch	formation	service branch
+P1383	contains settlement	populated places within
+P65	site of astronomical discovery	discovery site
+P1464	category for people born here	category for place of birth
+P1158	location of landing	landing site	landing location
+P206	located in or next to body of water	on lake	next to lake	located on body of water
+P466	occupant	tenant	inhabitant	renter	lessee	houses	location of
+P1703	is pollinated by	pollination by	pollinator
+P1906	office held by head of state	state headed by	head of state	position held by head of state
+P201	lake outflow	outflows	outflow
+P642	of	scope	in	in the scope of	within the scope of	in scope of	within scope of	applies to
+P1613	has natural reservoir
+P706	located on terrain feature	takes place in	on geographical feature	on natural feature	is on	is in	location (terrain feature)	loc (terr)	on	geographical region	terrain feature
+P501	enclave within	enclaved by
+P1336	territory claimed by	claimed by	sovereignty claimed by
+P1589	lowest point	extreme point lowest	extreme point deepest	deepest point
+P35	head of state	president	king	queen	emperor	monarch	state headed by	governor	leader	chief of state
+P636	route of administration
+P1596	penalty	judicial sentence	sentence
+P85	anthem	national anthem	march	official song
+P163	flag	flag description
+P797	authority	executive authority	governing body	governing authority	has authority	has governing body	governed by
+P205	basin country	basin countries
+P1887   vice-county Watsonian vice-county  Praeger vice-county  vice county
+P740    location of formation  originates from    comes from   place of foundation   founded in  formation location   source location of group/organisation    formed in  from    place of formation   place of incorporation
+P2674   next crossing downstream
+P122    basic form of government type of government form of government government
+P150    contains administrative territorial entity contains divides into divided into has towns has shires has cities has rural cities has municipalities has wards has local government areas has districts has boroughs subdivided into has counties has administrative divisions has arrondissements has villages has regions has states has members has countries
+P1313   office held by head of government office of head of government position of head of government position held by head of government title of head of government
+P1376   capital of county seat of county seat for
+P6      head of government mayor prime minister premier first minister head of national government chancellor governor government headed by executive power headed by
+P209    highest judicial authority
+P768   electoral district constituency ward riding electoral area electorate
+

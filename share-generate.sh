@@ -22,5 +22,5 @@ rm -rf logs/schedule/${task}~dx2:_:e${epoch}-s${seed}
     --data data --cache cache --task ${task} --sample heuristics --bidirect \
     --num-hops 3 --num-processes ${cpus} --unit-process 60.0 --num-epochs ${epoch} \
     --batch-size-node 128 --batch-size-edge-train 256 --batch-size-edge-valid 16 --batch-size-edge-test 16 \
-    --negative-rate-train 2 --negative-rate-eval 50 \
+    --negative-rate-train 2 --negative-rate-eval 24 --num-neg-rels-train 2 --num-neg-rels-eval 26 \
     --seed ${seed}

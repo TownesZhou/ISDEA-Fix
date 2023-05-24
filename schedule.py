@@ -357,8 +357,8 @@ def main() -> None:
     logger.critical("-- Generate test schedule:")
     assert args.negative_rate_eval % 2 == 0
     assert args.num_neg_rels_eval % 2 == 0
-    test_negative_rate_eval = args.negative_rate_eval // 2
-    test_num_neg_rels = args.num_neg_rels_eval // 2
+    test_negative_rate_eval = args.negative_rate_eval
+    test_num_neg_rels = args.num_neg_rels_eval
     tester.generate(
         adjs_ind_test,
         rels_ind_test,
