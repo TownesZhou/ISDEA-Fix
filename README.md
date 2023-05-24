@@ -11,6 +11,10 @@ Execute `pip install -e .` to install our implementation as importable Python mo
 
 To execute baseline codes, please follow the README in each baseline repos to create independent virtual environments.
 
+## Datasets
+
+We provide the preparation and sampling code for our datasets construction in PediaTypes and WikiTopics directory.
+
 ## Execute
 
 All example executions (`run.sh`) will run the least amount epoch (mostly 1). To reproduce results, please follow configuration in baseline papers and our paper.
