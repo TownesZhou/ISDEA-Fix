@@ -13,7 +13,7 @@ To execute baseline codes, please follow the README in each baseline repos to cr
 
 ## Datasets
 
-We provide the preparation and sampling code for our datasets construction in PediaTypes and WikiTopics directory.
+We provide the datasets including the preparation and sampling code for our datasets construction in PediaTypes and WikiTopics directory.
 
 ## Execute
 
