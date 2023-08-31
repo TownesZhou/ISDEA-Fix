@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument("--data", type=str, required=True, help="Data root directory")
     parser.add_argument("--cache", type=str, required=True, help="Cache root directory")
     parser.add_argument("--task", type=str, required=True, help="Task prefix.")
-    parser.add_argument("--sample", type=str, required=True, help="Sampling data type.")
+    parser.add_argument("--sample", type=str, required=False, default="heuristics", help="Sampling data type.")
     parser.add_argument(
         "--bidirect", action="store_true", help="Treat observation graph as bidirected."
     )
@@ -34,99 +34,107 @@ def main() -> None:
         action="store_true",
         help="Overfit on both training and validation.",
     )
-    parser.add_argument("--num-hops", type=int, required=True, help="Number of hops.")
+    parser.add_argument("--num-hops", type=int, required=False, default=3, help="Number of hops.")
     parser.add_argument(
-        "--num-processes", type=int, required=True, help="Number of processes."
+        "--num-processes", type=int, required=False, default=4, help="Number of processes."
     )
     parser.add_argument(
-        "--unit-process", type=float, required=True, help="Report unit of process."
+        "--unit-process", type=float, required=False, default=30.0, help="Report unit of process."
     )
     parser.add_argument(
-        "--num-epochs", type=int, required=True, help="Number of epochs."
+        "--num-epochs", type=int, required=False, default=10, help="Number of epochs."
     )
     parser.add_argument(
         "--batch-size-node",
         type=int,
-        required=True,
+        required=False,
+        default=128,
         help="Batch size of node sampling.",
     )
     parser.add_argument(
         "--batch-size-edge-train",
         type=int,
-        required=True,
+        required=False,
+        default=256,
         help="Batch size of training edge sampling.",
     )
     parser.add_argument(
         "--batch-size-edge-valid",
         type=int,
-        required=True,
+        required=False,
+        default=16,
         help="Batch size of validation edge sampling.",
     )
     parser.add_argument(
         "--batch-size-edge-test",
         type=int,
-        required=True,
+        required=False,
+        default=16,
         help="Batch size of test edge sampling.",
     )
     parser.add_argument(
         "--negative-rate-train",
         type=int,
-        required=True,
+        required=False,
+        default=2,
         help="Negative sampling rate of training.",
     )
     parser.add_argument(
         "--negative-rate-eval",
         type=int,
-        required=True,
+        required=False,
+        default=24,
         help="Negative sampling rate of evaluation.",
     )
     parser.add_argument(
         "--num-neg-rels-train",
         type=int,
-        required=True,
+        required=False,
+        default=2,
         help="Number of negative relation samples of both training.",
     )
     parser.add_argument(
         "--num-neg-rels-eval",
         type=int,
-        required=True,
+        required=False,
+        default=26,
         help="Number of negative relation samples of both evaluation.",
     )
     parser.add_argument(
-        "--seed-schedule", type=int, required=True, help="Schedule seed."
+        "--seed-schedule", type=int, required=False, default=42, help="Schedule seed."
     )
-    parser.add_argument("--device", type=str, required=True, help="Device.")
-    parser.add_argument("--model", type=str, required=True, help="Model.")
-    parser.add_argument("--hidden", type=int, required=True, help="Hidden layer size.")
+    parser.add_argument("--device", type=str, required=False, default="cuda", help="Device.")
+    parser.add_argument("--model", type=str, required=False, default="dssgnn", help="Model.")
+    parser.add_argument("--hidden", type=int, required=False, default=32, help="Hidden layer size.")
     parser.add_argument(
-        "--activate", type=str, required=True, help="Activation function."
+        "--activate", type=str, required=False, default="relu", help="Activation function."
     )
-    parser.add_argument("--dropout", type=float, required=True, help="Dropout.")
+    parser.add_argument("--dropout", type=float, required=False, default=0.0, help="Dropout.")
     parser.add_argument(
-        "--num-bases", type=int, required=True, help="Number of RGCN bases."
+        "--num-bases", type=int, required=False, default=4, help="Number of RGCN bases."
     )
-    parser.add_argument("--dss-aggr", type=str, required=True, help="DSS aggregation")
+    parser.add_argument("--dss-aggr", type=str, required=False, default="mean", help="DSS aggregation")
     parser.add_argument(
         "--ablate",
         type=str,
         required=False,
-        default="",
+        default="dss",
         help="DSS triplet feature ablation study",
     )
     parser.add_argument(
-        "--clip-grad-norm", type=float, required=True, help="Gradient clipping norm."
+        "--clip-grad-norm", type=float, required=False, default=1.0, help="Gradient clipping norm."
     )
-    parser.add_argument("--lr", type=float, required=True, help="Learning rate.")
+    parser.add_argument("--lr", type=float, required=False, default=1e-3, help="Learning rate.")
     parser.add_argument(
-        "--weight-decay", type=float, required=True, help="Weight decay."
+        "--weight-decay", type=float, required=False, default=5e-4, help="Weight decay."
     )
-    parser.add_argument("--seed-model", type=int, required=True, help="Model seed.")
+    parser.add_argument("--seed-model", type=int, required=False, default=42, help="Model seed.")
     parser.add_argument(
-        "--ks", type=str, required=True, help="Evaluating hit at ks separated by comma."
+        "--ks", type=str, required=False, default="1,3,5,10", help="Evaluating hit at ks separated by comma."
     )
-    parser.add_argument("--margin", type=float, required=True, help="Distance margin.")
+    parser.add_argument("--margin", type=float, required=False, default=10.0, help="Distance margin.")
     parser.add_argument(
-        "--early-stop", type=int, required=True, help="Early stop patience."
+        "--early-stop", type=int, required=False, default=5, help="Early stop patience."
     )
     args = parser.parse_args()
 
