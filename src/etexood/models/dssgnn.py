@@ -476,6 +476,22 @@ class DSSGNNExcl(Model):
         """
         #
         return self.num_relations
+    
+    def reset_entity_embedding(self: SelfDSSGNNExcl, /) -> SelfDSSGNNExcl:
+        R"""
+        Reset the entity embeddings via Xiaver normal initialization. This method should be called
+        at the start of each epoch to re-initialize the entity embeddings.
+        
+        Returns
+        -------
+        - self
+            Instance itself.
+        """
+        gain = torch.nn.init.calculate_gain('relu')
+        torch.nn.init.xavier_normal_(self.embedding_entity, gain=gain)
+
+        #
+        return self
 
     def reset_parameters(self: SelfDSSGNNExcl, rng: torch.Generator, /) -> SelfDSSGNNExcl:
         R"""
@@ -492,7 +508,9 @@ class DSSGNNExcl(Model):
             Instance itself.
         """
         #
-        self.reset_ones(rng, self.embedding_entity.data)
+        # self.reset_ones(rng, self.embedding_entity.data)
+        # Instead of initializing the entity embedings to 1, initialize to Xavier normal.
+        self.reset_entity_embedding()
         self.reset_glorot(rng, self.embedding_shortest.data, fanin=1, fanout=self.num_hiddens)
 
         #

@@ -1084,6 +1084,9 @@ class Trainer(Transformer):
             abbr_loss: lambda _, n_samples: n_samples,
         }
 
+        # Reinitialize the model's entity embeddings. 
+        model.reset_entity_embedding()
+
         #
         # \\:if self._sample in (self.HEURISTICS, self.BELLMAN):
         # \\:    #
