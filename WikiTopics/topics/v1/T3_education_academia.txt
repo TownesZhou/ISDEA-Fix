@@ -1,0 +1,9 @@
+P69 educated at / alma mater
+P184 doctoral advisor / advisor
+P803 professorship / professor
+P512 academic degree / degree
+P1066 student of / teacher
+P802 student / students
+P108 employer / workplace (when applied to academic institutions)
+P88 commissioned by (when applied to academic projects)
+P286 head coach / manager (when applied to sports in an academic context)

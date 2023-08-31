@@ -11,6 +11,10 @@ Execute `pip install -e .` to install our implementation as importable Python mo
 
 To execute baseline codes, please follow the README in each baseline repos to create independent virtual environments.
 
+## Datasets
+
+We provide the datasets including the preparation and sampling code for our datasets construction in PediaTypes and WikiTopics directory.
+
 ## Execute
 
 All example executions (`run.sh`) will run the least amount epoch (mostly 1). To reproduce results, please follow configuration in baseline papers and our paper.
@@ -18,10 +22,10 @@ We use 50 epochs for all experiments.
 
 In `run.sh`, we provide the simplest example for synthetic FD-1 and FD-2 tasks.
 To run other real-world inductive knowledge graph completion datasets, please refer to `share-generate.sh`, `share-fit.sh` and `share-transform.sh`.
-For example, to run an experiment with ISDEA using mean DSS aggregation on FB237 v1, please set following variables in those three scripts as
+For example, to run an experiment with ISDEA using mean DSS aggregation with distance on DB2WD V1, please set following variables in those three scripts as
 
 ```bash
-task=FB2371
+task=DB2WD-15K-V1
 model=dssgnn
 aggr=mean
 ablate=both

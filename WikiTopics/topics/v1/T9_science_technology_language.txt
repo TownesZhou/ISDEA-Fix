@@ -1,0 +1,17 @@
+P277 programming language / language
+P282 writing system / alphabet
+P407 language of work or name / broadcasting language
+P1412 languages spoken, written or signed / languages spoken
+P103 native language / first language
+P2293 genetic association
+P703 found in taxon / found in species
+P171 parent taxon / taxon parent
+P105 taxon rank / taxonomic rank
+P183 endemic to / endemism
+P2597 Gram staining
+P364 original language of film or TV show / original language
+P306 operating system / OS
+P516 powered by / engine
+P961 IP Code
+P279 subclass of / rdfs:subClassOf
+P61 discoverer or inventor / inventor

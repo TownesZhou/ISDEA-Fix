@@ -1,0 +1,26 @@
+P50 author / written by
+P178 developer / developed by
+P136 genre / music genre
+P135 movement / school
+P106 occupation / profession
+P61 discoverer or inventor / inventor
+P166 award received / prize received
+P86 composer / songwriter
+P84 architect / architecture firm
+P58 screenwriter / scriptwriter
+P161 cast member / starring
+P674 characters
+P1441 present in work / from work
+P1080 from fictional universe / from universe
+P275 license / licence (when applied to artistic works)
+P437 distribution format / media (when applied to media formats)
+P180 depicts / depiction of (when applied to artistic works)
+P186 material used / medium (when applied to artistic works)
+P58 screenwriter / scriptwriter
+P725 voice actor / voice dubber
+P647 drafted by
+P915 filming location / location of filming
+P162 producer / record producer
+P1040 film editor / editor
+P272 production company / film studio
+P123 publisher / book publisher

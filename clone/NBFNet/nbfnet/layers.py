@@ -7,6 +7,22 @@ from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.utils import degree
 
 
+class REmbedding(nn.Module): # Modify
+    def __init__(self, num_relation, input_dim): # Modify
+        super(REmbedding, self).__init__() # Modify
+        self.num_embeddings = num_relation # Modify
+        self.embedding_dim = input_dim # Modify
+        self.weight = nn.Parameter(torch.empty((1, input_dim)), requires_grad=True) # Modify
+        self.reset_parameters() # Modify
+    
+    def reset_parameters(self): # Modify
+        torch.nn.init.normal_(self.weight) # Modify
+    
+    def forward(self, x): # Modify
+        return F.embedding( # Modify
+            x, self.weight.expand(self.num_embeddings, self.embedding_dim)) # Modify
+
+
 class GeneralizedRelationalConv(MessagePassing):
 
     eps = 1e-6
@@ -56,7 +72,8 @@ class GeneralizedRelationalConv(MessagePassing):
             self.relation_linear = nn.Linear(query_input_dim, num_relation * input_dim)
         else:
             # relation embeddings as an independent embedding matrix per each layer
-            self.relation = nn.Embedding(num_relation, input_dim)
+            # self.relation = nn.Embedding(num_relation, input_dim)
+            self.relation = REmbedding(num_relation, input_dim) # Mofify
 
     def forward(
         self, input, query, boundary, edge_index, edge_type, size, edge_weight=None
@@ -70,7 +87,8 @@ class GeneralizedRelationalConv(MessagePassing):
             )
         else:
             # layer-specific relation features as a special embedding matrix unique to each layer
-            relation = self.relation.weight.expand(batch_size, -1, -1)
+            # relation = self.relation.weight.expand(batch_size, -1, -1)
+            relation = self.relation.weight.expand(batch_size, self.num_relation, -1) # Mofify
         if edge_weight is None:
             edge_weight = torch.ones(len(edge_type), device=input.device)
 
