@@ -507,6 +507,9 @@ class Evaluator(Transformer):
             abbr_loss: 0,
         }
 
+        # Reinitialize the model's entity embeddings. 
+        model.reset_entity_embedding()
+
         #
         # \\:if self._sample in (self.HEURISTICS, self.BELLMAN):
         # \\:    #

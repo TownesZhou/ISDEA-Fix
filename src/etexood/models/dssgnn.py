@@ -413,7 +413,7 @@ class DSSGNNExcl(Model):
 
         # DSSGNN is strutural, thus entity embedding is none.
         # We use 1 as embedding of all entities, and freeze them from learning.
-        self.embedding_entity = torch.nn.Parameter(torch.zeros(self.num_entities, 1))
+        self.embedding_entity = torch.nn.Parameter(torch.zeros(self.num_entities, self.num_hiddens))
         self.embedding_entity.requires_grad = False
 
         # DSSGNN should be joint representation which is simplified into a structrual representation along with some
@@ -424,8 +424,9 @@ class DSSGNNExcl(Model):
         #
         self.convs = torch.nn.ModuleList()
         for fanin, fanout in (
-            (1, self.num_hiddens),
-            *((self.num_hiddens, self.num_hiddens) for _ in range(self.num_layers - 1)),
+            # (1, self.num_hiddens),
+            # *((self.num_hiddens, self.num_hiddens) for _ in range(self.num_layers - 1)),
+            (self.num_hiddens, self.num_hiddens) for _ in range(self.num_layers)
         ):
             #
             self.convs.append(
