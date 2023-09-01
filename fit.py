@@ -103,6 +103,10 @@ def main() -> None:
         help="Number of negative relation samples of both evaluation.",
     )
     parser.add_argument(
+        "--seed-all", type=int, required=False, default=None, 
+        help="All seed. If specified, will supersede seed-schedule and seed-model."
+    )
+    parser.add_argument(
         "--seed-schedule", type=int, required=False, default=42, help="Schedule seed."
     )
     parser.add_argument("--device", type=str, required=False, default="cuda", help="Device.")
@@ -139,6 +143,11 @@ def main() -> None:
         "--early-stop", type=int, required=False, default=5, help="Early stop patience."
     )
     args = parser.parse_args()
+
+    # Modify certain arguments
+    if args.seed_all is not None:
+        args.seed_schedule = args.seed_all
+        args.seed_model = args.seed_all
 
     # Allocate caching disk space.
     task = "-".join((args.task, "trans"))
