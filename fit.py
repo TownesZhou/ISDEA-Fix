@@ -378,40 +378,37 @@ def main() -> None:
     LOSS = {"binary": "BCE", "distance": "Dist"}[loss]
 
     # Initial evaluation.
-    # (metrics, _) = validator.test(
-    #     model,
-    #     loss,
-    #     ks=ks,
-    #     negative_rate=args.negative_rate_eval,
-    #     num_neg_rels=args.num_neg_rels_eval,
-    #     margin=args.margin,
-    #     eind=0,
-    #     emax=args.num_epochs,
-    # )
-    # metric_pair = (
-    #     *(metrics["Hit@{:d}".format(k)] for k in reversed(ks)),
-    #     metrics["MRR"],
-    #     -metrics["MR"],
-    #     -metrics[LOSS]
-    # )
-    ### DEBUG ###
-    buf = []
-    metric_pair = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    (metrics, _) = validator.test(
+        model,
+        loss,
+        ks=ks,
+        negative_rate=args.negative_rate_eval,
+        num_neg_rels=args.num_neg_rels_eval,
+        margin=args.margin,
+        eind=0,
+        emax=args.num_epochs,
+    )
+    metric_pair = (
+        *(metrics["Hit@{:d}".format(k)] for k in reversed(ks)),
+        metrics["MRR"],
+        -metrics["MR"],
+        -metrics[LOSS]
+    )
     metric_best = metric_pair
     torch.save(model.state_dict(), os.path.join(unique, "parameters"))
     num_no_improves = 0
-    # metrics["Improve"] = True
-    # buf = [metrics]
-    # pd.DataFrame.from_records(
-    #     buf
-    #     + [
-    #         {
-    #             key: {float: float("nan"), bool: False}[type(val)]
-    #             for (key, val) in buf[-1].items()
-    #         }
-    #         for _ in range(args.num_epochs)
-    #     ],
-    # ).to_csv(os.path.join(unique, "metrics.csv"))
+    metrics["Improve"] = True
+    buf = [metrics]
+    pd.DataFrame.from_records(
+        buf
+        + [
+            {
+                key: {float: float("nan"), bool: False}[type(val)]
+                for (key, val) in buf[-1].items()
+            }
+            for _ in range(args.num_epochs)
+        ],
+    ).to_csv(os.path.join(unique, "metrics.csv"))
 
     #
     for eind in range(1, args.num_epochs + 1):
@@ -445,9 +442,7 @@ def main() -> None:
             *(metrics["Hit@{:d}".format(k)] for k in reversed(ks)),
             metrics["MRR"],
             -metrics["MR"],
-            -metrics[LOSS],
-            -metrics["{:s}-Ent".format(LOSS)],
-            -metrics["{:s}-Rel".format(LOSS)],
+            -metrics[LOSS]
         )
         if metric_best < metric_pair:
             #
