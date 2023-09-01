@@ -39,3 +39,9 @@ __pycache__/
 /logs
 /scripts/
 /scripts
+
+# Ignore Slurm and other utility scripts
+*slurm*.sh
+*slurm*.txt
+submit_batch.py
+commands.txt
