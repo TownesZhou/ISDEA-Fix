@@ -210,6 +210,10 @@ class DSSConvExcl(torch.nn.Module):
                 ),
                 train_eps=self.train_eps,
             )
+        # Add GraphSAGE.
+        elif self.kernel == "sage":
+            self.conv1 = thgeo.nn.SAGEConv(self.num_inputs, self.num_outputs, aggr='sum', normalize=True)
+            self.conv2 = thgeo.nn.SAGEConv(self.num_inputs, self.num_outputs, aggr='sum', normalize=True)
         else:
             #
             raise RuntimeError('Unknown convolution kernel "{:s}".'.format(self.kernel))
@@ -268,6 +272,28 @@ class DSSConvExcl(torch.nn.Module):
                 + self.conv2.nn[2].weight.data.numel()
                 + self.conv2.nn[2].bias.data.numel()
                 + int(self.train_eps)
+                + sum(param.numel() for param in self.batchnorm.parameters())
+            )
+        # Add GraphSAGE.
+        elif self.kernel == "sage":
+            #
+            Model.reset_glorot(rng, self.conv1.lin_l.weight.data, fanin=self.num_inputs, fanout=self.num_outputs)
+            Model.reset_glorot(rng, self.conv1.lin_r.weight.data, fanin=self.num_inputs, fanout=self.num_outputs)
+            Model.reset_zeros(rng, self.conv1.lin_l.bias.data)
+            Model.reset_glorot(rng, self.conv2.lin_l.weight.data, fanin=self.num_inputs, fanout=self.num_outputs)
+            Model.reset_glorot(rng, self.conv2.lin_r.weight.data, fanin=self.num_inputs, fanout=self.num_outputs)
+            Model.reset_zeros(rng, self.conv2.lin_l.bias.data)
+
+            #
+            self.batchnorm.reset_parameters()
+            #
+            assert sum(parameter.numel() for parameter in self.parameters()) == (
+                self.conv1.lin_l.weight.data.numel()
+                + self.conv1.lin_r.weight.data.numel()
+                + self.conv1.lin_l.bias.data.numel()
+                + self.conv2.lin_l.weight.data.numel()
+                + self.conv2.lin_r.weight.data.numel()
+                + self.conv2.lin_l.bias.data.numel()
                 + sum(param.numel() for param in self.batchnorm.parameters())
             )
         else:
