@@ -1,0 +1,37 @@
+P834	train depot	railway depot	depot	rail yard
+P1071	location of final assembly	assembly location	place built	place made	location of origin	place of origin	made in	minted at	mint	manufactured in	manufacturing location	location created	creation location	place of production	production place
+P121	item operated	fleet	aircraft in fleet	aircraft operated	equipment operated	facility operated	service operated	operator of	operated	operates	eq	acop	aircraft carried	item used	uses item	runs	controls
+P197	adjacent station	next station	previous station	next stop	neighbouring station
+P1876	vessel	orbiter	spaceship	spacecraft	ship	boat	craft	vehicle
+P137	operator	operated by
+P176	manufacturer	maker	made by
+P2673	next crossing upstream
+P2848	Wi-Fi access	wifi	Wi-Fi	WLAN
+P3025	open days	open on days	days open	opening days
+P3082	destroyed	structures destroyed
+P559	terminus	termini	end point	terminating connection	trailhead
+P1302	primary destinations
+P1192	connecting service
+P1598	consecrator	consecrated by	has consecrator
+P16	highway system	network of routes	system of routes	transport network	routes system	part of network	road type
+P521	scheduled service destination
+P3512	means of locomotion	locomotion	locomotion method
+P833	interchange station	OSI	out of station interchange
+P193	main building contractor	building contractor	built by	constructed by	builder	Main contractor
+P707	satellite bus	spacecraft bus
+P3081	damaged	structures damaged
+P289	vessel class	ship class	submarine class	spacecraft class	class of vessel
+P81     connecting line  railway line  rapid transit line  line connected to   rail line connected to   is on
+P3263   base
+P113    airline hub    hub   hub airport
+P2058   depositor  depository  depositary
+P375    space launch vehicle carrier rocket  launch vehicle Rocket used
+P3438   vehicle normally used    drives this car    automobile used    motorcycle driven by subject
+P669    located on street   is on  street   square   road    address street   on street   located at street (item)
+P3032   adjacent building   located next to   neighboring building
+P1654   wing configuration
+P1002   engine configuration configuration of engine cylinders
+P1078   valvetrain configuration
+P1064   track gauge gauge
+P1956   takeoff and landing capability
+P3093  recovered by recovery vehicle recovery group

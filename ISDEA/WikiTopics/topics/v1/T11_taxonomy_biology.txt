@@ -1,0 +1,10 @@
+P2293 genetic association
+P703 found in taxon / found in species
+P171 parent taxon / taxon parent
+P105 taxon rank / taxonomic rank
+P183 endemic to / endemism
+P1071 location of final assembly / assembly location
+P376 located on astronomical location / planet
+P509 cause of death / method of murder
+P527 has part / formed from
+P551 residence / lived in

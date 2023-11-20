@@ -1,0 +1,11 @@
+P2416 sports discipline competed in / sport disciplines competed in
+P641 sport / sports
+P54 member of sports team / member of team
+P195 collection / art collection
+P115 home venue / ground
+P413 position played on team / speciality
+P286 head coach / manager
+P118 league / division
+P2094 competition class / class for competition
+P1303 instrument / plays
+P344 director of photography / cinematographer

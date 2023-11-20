@@ -1,0 +1,60 @@
+P2974	habitat
+P3094	develops from	developed from	antecedent anatomical structure	evolves from	evolved from
+P1365	replaces	forefather	previous job holder	replaced	preceded by	succeeds	predecessor	supersedes	continues from
+P1552	has quality	trait	inherent property	attribute	aspect	defining feature	has feature	has characteristic	has property	characterized by	required property	quality	defining parameter	parameter	requirement	defined by
+P2293	genetic association
+P2827	flower color	color of the flower	colour of the flower	flower colour
+P2822	by-product of
+P1137	fossil found in this unit
+P2597	Gram staining
+P1531	parent of this hybrid, breed, or cultivar	parent(s) of this hybrid	parent of this hybrid	parents of this hybrid
+P225	taxon name	scientific name	botanical name	zoological name
+P171	parent taxon	parent of taxon
+P105	taxon rank	rank
+P1420	taxon synonym	synonym	of synonym
+P694	replaced synonym (for nom. nov.)	nomen novum	replacement name	for
+P744	type of organism for taxon	type species	type genus	type
+P703	found in taxon
+P684	ortholog
+P685	NCBI Taxonomy ID
+P686	Gene Ontology ID
+P687	BHL Page ID
+P688	encodes	encoded by	gene product
+P689	afflicts	causes
+P691	NKCR AUT ID
+P2375	has superpartner	superpartner	has sparticle	sparticle	has supersymmetric particle	supersymmetric particle
+P1672	this taxon is source of	this taxon is the source of	this taxon is a source of
+P2414	substrate of
+P1916	gene substitution association with
+P2670	has parts of the class	has part(s) that are instances of	has parts(P527): instances(P31)of	parts of(P361) subject are some	is built/made with example(s) of	is constructed with members of	composition has pieces that are	of subcomponents whose class is	has part(s) forming subclass of	constitutent(s) are classified as	is assemblage with parts
+P3739	inflorescence
+P460	said to be the same as	same as	disputed equivalence	the same as	equivalent to	equivalent of	is the same as	is said to be the same as	similar to	close to	same	said to be different from	possibly the same as	possibly equivalent to	see also
+P2587	has phoneme
+P4000	has fruit type
+P660	EC enzyme classification	Enzyme Commission classification name
+P4004	has spine color
+P4006	has petal color
+P3432	parent cell line
+P3261	anatomical branch of
+P680	molecular function
+P3491	muscle insertion
+P1990	species kept	animals housed	animals species kept	resident animals	plant taxon in collection	resident animal species	species holdings	animals at zoo	animals in aquarium	trees in arboretum	plant in herborium	plant taxon in botanical garden	rose varity in rose garden	animals kept	captive animals
+P128    regulates (molecular biology)
+P1915   gene inversion association with
+P789    mushroom ecological type
+P1057   chromosome on chromosome
+P1425   ecoregion (WWF)
+P3190   innervates
+P1478   has immediate cause has immediate causes immediate effect of immediate result of immediate outcome of has proximate cause has proximate causes proximate effect of proximate result of proximate outcome of is immediately caused by is proximately caused by immediately caused by proximately caused by
+P682    biological process
+P681    cell component subcellular localization
+P4425   mtDNA haplogroup
+P4426   Y-DNA Haplogroup
+P427    taxonomic type type species type genus
+P1034   main food source food source
+P1420   taxon synonym this taxon has as synonym synonym of this name
+P783    hymenium type
+P3490   muscle origin
+P566   basionym
+P2821  by-product byproduct
+P1582  natural product of taxon fruit of (taxon) comes from (taxon) made from

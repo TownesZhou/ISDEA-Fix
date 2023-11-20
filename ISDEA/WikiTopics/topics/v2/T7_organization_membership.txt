@@ -1,0 +1,34 @@
+P945	allegiance	fidelity	loyalty
+P1037	director/manager	manager	director	manager/director	general manager	director general
+P749	parent organization	owned by (company or organization)	subsidiary of	parent company	parent organisation	owned by (company or organisation)	holding	holding company	part of	parent unit	parent agency	superior formation
+P355	subsidiary	subsidiary company	subsidiary entities	parent company of	has subsidiary	owns
+P114	airline alliance
+P137	operator	service operator	facility operator	operated by	managed by	administrator	item operator	user
+P937	work location	workplace	work location	place of activity	active in	location of work	place of work	working at
+P3461	designated as terrorist by
+P1408	licensed to broadcast to	city of license	community of license
+P2770	source of income	income source	source of revenue	revenue source
+P463	member of
+P2376	superpartner of
+P1951	investor	private investor	investors
+P54	member of sports team	member of team	team	team played for	played for	plays for	teams played for	of
+P1462	standards body	standards organisation	standards setting organization	standards setting organisation	standards developing organization	standards developing organisation
+P190	twinned administrative body	twin town	sister town	twin cities	twin city	partner city	partner town	sister city
+P208	executive body	executive branch
+P108	employer	workplace	employed by	works at	working for	worked for	works for	worked at	working place
+P127	owned by	is owned by	owner	belongs to	shareholder	stockholder	shareholders	stockholders	owners	provenance
+P3447	mirrors data from
+P199	business division	divisions	has division
+P399	companion of
+P170	chief executive officer	CEO	chief executive	ceo	executive director
+P1789	chief operating officer	COO
+P102	member of political party	political party	party	member of	member of party	party membership
+P1840	investigated by
+P272    production company   film studio   studio   motion picture studio   movie studio   production house   theatre company   theater company   theatrical troupe   ballet company   broadcasting company
+P123    publisher    book publisher    video game publisher   software publisher   publishing house   published by    board game publisher
+P1268   represents represents organisation
+P1533   family name identical to this given name related surname related family name family name identical to this first name
+P6      head of government mayor prime minister premier first minister head of national government chancellor governor government headed by executive power headed by
+P414   stock exchange exchange listed on listed on exchange listed on stock exchange
+P664   organizer organiser event producer organising body organizing body organized by organised by
+P1416  affiliation affiliated with sister society

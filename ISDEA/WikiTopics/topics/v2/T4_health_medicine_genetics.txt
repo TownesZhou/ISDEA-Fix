@@ -1,0 +1,31 @@
+P1677	index case of
+P689	afflicts
+P2176	drug used for treatment	used for treatment	treatment	prescribed drug	treated by
+P4545	sexually homologous with
+P1913	gene duplication association with
+P1924	vaccine for	target disease
+P2289	venous drainage	vein	venous return
+P927	anatomical location
+P2293	genetic association
+P1912	deletion association with
+P1196	manner of death	circumstance of death	death manner	death type	type of death
+P970	neurological function
+P2822	by-product of
+P3189	innervated by
+P3781	has active ingredient
+P780	symptoms	signs
+P923	medical examinations	possible examinations	examinations
+P1050	medical condition	health condition	health issue	diagnosis	health problem
+P1550	Orphanet ID
+P2892	UMLS CUI
+P557	Disease Ontology ID
+P3205	patient of
+P3432	parent cell line
+P1916	gene substitution association with
+P769	significant drug interaction	drug interaction
+P3354	positive therapeutic predictor
+P1199   mode of inheritance
+P1995   health specialty  medical speciality    medical specialty
+P2286   arterial supply artery
+P924    possible treatment therapy medical therapy treatment health treatment medical treatment
+P2175  medical condition treated disease treated treats treats medical condition treats disease capable of inhibiting or preventing pathological process

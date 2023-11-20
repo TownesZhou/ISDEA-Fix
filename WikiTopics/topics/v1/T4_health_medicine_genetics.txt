@@ -1,8 +1,0 @@
-P1050 medical condition / disability
-P509 cause of death / method of murder
-P1196 manner of death / circumstance of death
-P1995 health specialty / medical speciality
-P1057 chromosome / on chromosome
-P2293 genetic association
-P289 vessel class / ship class (when applied to hospital ships)
-P2597 Gram staining

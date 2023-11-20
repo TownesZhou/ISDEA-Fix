@@ -1,8 +1,0 @@
-P166 award received / prize received
-P1411 nominated for / nominee for
-P1346 winner / won by
-P1285 Munzinger IBA
-P647 drafted by
-P710 participant / participants (when applied to competitions)
-P2094 competition class / class for competition
-P1923 participating team / teams (when applied to sports competitions)
