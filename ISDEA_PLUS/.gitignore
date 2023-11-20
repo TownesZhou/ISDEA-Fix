@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+
+# VSCode
+.vscode/
+
+# Weights and bias
+wandb/
+sweep/
+
+# Model checkpoints
+result/
+
+# Slurm related scripts and logs
+slurm/
+logs/
+slurm_log/
+debug_slurm.sh
+sweep_slurm.sh
+
+# Jupyter notebooks for data processing
+notebooks/
+
+# Run command examples
+commands.md
