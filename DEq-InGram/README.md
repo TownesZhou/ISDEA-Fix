@@ -16,10 +16,10 @@ To train a model on the same dataset but log to Weights & Biases, run
 Python train.py --data_path data/PediaTypes/ --data_name DB2WD-15K-V2 --exp PediaTypes --seed 42 --wandb --wandb-project <your wandb project name> --wandb-entity <your account/team name> --wandb-job-type <wandb job type>
 ```
 
-To test the best checkpoint saved from the above training run, which should be located in `ckpt/PediaTypes/DB2WD-15K-V2/<run_hash>`, run
+To test **DEq-InGram with 10 Monte Carlo Samples** using the best checkpoint saved from the above training run, which should be located in `ckpt/PediaTypes/DB2WD-15K-V2/<run_hash>`, run
 
 ```shell
-test.py --best --run_hash <run_hash> --data_name DB2WD-15K-V2 --exp PediaTypes
+test.py --best --run_hash <run_hash> --data_name DB2WD-15K-V2 --exp PediaTypes --mc 10
 ```
 
 where <run_hash> is the hash of the hyperparameters of the previous training run. The hash is printed to the terminal when the training run is started.
@@ -27,7 +27,7 @@ where <run_hash> is the hash of the hyperparameters of the previous training run
 Or alternatively, you can specify data_name and run_hash together using the `--data_name_run_hash` argument:
 
 ```shell
-test.py --best --data_name_run_hash DB2WD-15K-V2/<run_hash> --exp PediaTypes
+test.py --best --data_name_run_hash DB2WD-15K-V2/<run_hash> --exp PediaTypes --mc 10
 ```
 
 ## Summary of hyperparameters
